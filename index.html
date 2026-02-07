@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ritual Tracker</title>
+  <style>
+    :root {
+      --neu-bg: #E8ECEF;
+      --neu-light: #ffffff;
+      --neu-dark: #a3b1c6;
+      --neu-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5);
+      --neu-shadow-sm: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(255,255,255,0.5);
+      --neu-shadow-xs: 3px 3px 6px rgba(163,177,198,0.45), -3px -3px 6px rgba(255,255,255,0.45);
+      --neu-inset: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(255,255,255,0.6);
+      --neu-inset-sm: inset 2px 2px 5px rgba(163,177,198,0.4), inset -2px -2px 5px rgba(255,255,255,0.5);
+      --text-primary: #3a4556;
+      --text-secondary: #6b7a8d;
+      --text-muted: #8895a7;
+      --accent: #a8c5a0;
+      --accent-dark: #7da876;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Pro Display", "Inter", sans-serif;
+    }
+
+    * { box-sizing: border-box; font-family: var(--font-family); letter-spacing: -0.01em; margin: 0; padding: 0; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--neu-bg); padding: 20px; transition: background 0.3s;
+    }
+
+    /* ========== Layout ========== */
+    .main-container {
+      display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 40px;
+      width: 100%; max-width: 860px;
+    }
+    @media (max-width: 760px), (max-aspect-ratio: 4/5) {
+      .main-container { flex-direction: column; gap: 25px; }
+    }
+
+    /* ========== Onboarding Window ========== */
+    .window {
+      width: 100%; max-width: 420px; background: var(--neu-bg); border-radius: 24px;
+      box-shadow: var(--neu-shadow); overflow: hidden; display: flex; flex-direction: column;
+      z-index: 10; flex-shrink: 0;
+    }
+    .window.hidden { display: none; }
+    .title-bar {
+      height: 54px; background: var(--neu-bg); display: flex; align-items: center; padding: 0 18px;
+      border-bottom: 1px solid rgba(163,177,198,0.25);
+    }
+    .dots { display: flex; gap: 7px; flex: 1; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1), 1px 1px 2px rgba(255,255,255,0.5); }
+    .dot.red { background: #d4a0a0; } .dot.yellow { background: #d4d4a0; } .dot.green { background: #a0c8a0; }
+    .bar-title { font-size: 13px; font-weight: 700; color: var(--text-primary); flex: 2; text-align: center; letter-spacing: 0.05em; }
+    .nav-controls { flex: 1; display: flex; justify-content: flex-end; gap: 10px; }
+
+    .content { padding: 30px 25px; min-height: 300px; position: relative; overflow-y: auto; }
+    .step { display: none; animation: fadeUp 0.3s ease; }
+    .step.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .content h1 { font-size: 20px; font-weight: 800; margin: 0 0 8px; color: var(--text-primary); }
+    .content p { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
+
+    /* ========== Form Elements ========== */
+    .label-text { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
+    input[type="text"], select {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: none;
+      background: var(--neu-bg); outline: none; font-size: 13px; margin-bottom: 12px;
+      color: var(--text-primary); box-shadow: var(--neu-inset-sm);
+      -webkit-appearance: none; appearance: none; transition: all 0.3s ease;
+    }
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+    }
+    input[type="text"]:focus, select:focus {
+      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
+    }
+    input::placeholder { color: #9ba8b8; }
+    input[type="color"] {
+      width: 100%; height: 42px; border: none; padding: 4px; cursor: pointer;
+      border-radius: 12px; background: var(--neu-bg); box-shadow: var(--neu-shadow-sm);
+      -webkit-appearance: none; appearance: none; margin-bottom: 12px;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; }
+
+    .neu-check-label {
+      display: flex; align-items: center; gap: 8px; font-size: 12px;
+      color: var(--text-secondary); margin-bottom: 12px; cursor: pointer;
+    }
+    input[type="checkbox"] {
+      -webkit-appearance: none; appearance: none;
+      width: 18px !important; height: 18px !important; border-radius: 6px; cursor: pointer;
+      background: var(--neu-bg); border: none; position: relative;
+      box-shadow: var(--neu-inset-sm); transition: all 0.2s ease; flex-shrink: 0; padding: 0 !important; margin: 0 !important;
+    }
+    input[type="checkbox"]:checked { box-shadow: var(--neu-inset); }
+    input[type="checkbox"]:checked::after {
+      content: '\2713'; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); font-size: 11px; font-weight: 700; color: var(--text-primary);
+    }
+
+    /* Nav & Action Buttons */
+    .nav-btn {
+      background: var(--neu-bg); border: none; cursor: pointer; color: var(--text-primary);
+      transition: all 0.2s ease; padding: 7px; display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; box-shadow: var(--neu-shadow-xs);
+    }
+    .nav-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .nav-btn:active { box-shadow: var(--neu-inset-sm); }
+    .nav-btn:disabled { opacity: 0.25; cursor: default; box-shadow: none; }
+
+    .apply-btn {
+      width: 100%; padding: 13px 16px; border-radius: 14px; border: none;
+      cursor: pointer; font-size: 13px; font-weight: 700; color: #fff;
+      background: var(--accent); box-shadow: var(--neu-shadow-xs);
+      margin-top: 10px; transition: all 0.2s;
+    }
+    .apply-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .apply-btn:active { box-shadow: var(--neu-inset-sm); }
+
+    /* Radio-style selector row */
+    .option-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .option-card {
+      flex: 1; padding: 14px 10px; border-radius: 14px; border: none; cursor: pointer;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: var(--text-secondary); transition: all 0.2s;
+    }
+    .option-card:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .option-card.selected { box-shadow: var(--neu-inset); color: var(--text-primary); }
+    .option-card .option-icon { font-size: 22px; }
+
+    /* ========== Widget ========== */
+    .widget-frame {
+      width: 320px; background: var(--neu-bg); border-radius: 32px;
+      box-shadow: var(--neu-shadow); overflow: visible;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 28px 24px 22px; position: relative; flex-shrink: 0;
+      transition: all 0.5s ease;
+    }
+
+    /* Clock Circle */
+    .clock-wrap {
+      position: relative; width: 160px; height: 160px; margin-bottom: 20px;
+    }
+    .clock-ring-bg {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      box-shadow: var(--neu-shadow);
+      background: var(--neu-bg);
+    }
+    .clock-svg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      transform: rotate(-90deg); z-index: 2;
+    }
+    .clock-inner {
+      position: absolute; inset: 12px; border-radius: 50%;
+      background: var(--neu-bg);
+      box-shadow: inset 4px 4px 8px rgba(163,177,198,0.45), inset -4px -4px 8px rgba(255,255,255,0.55);
+      display: flex; align-items: center; justify-content: center; z-index: 3;
+    }
+    .clock-time {
+      font-size: 32px; font-weight: 700; color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+    /* Analog clock */
+    .analog-face { position: relative; width: 100%; height: 100%; }
+    .analog-face .hand {
+      position: absolute; bottom: 50%; left: 50%; transform-origin: bottom center;
+      border-radius: 2px;
+    }
+    .analog-face .hour-hand { width: 3px; height: 28px; background: var(--text-primary); margin-left: -1.5px; }
+    .analog-face .min-hand { width: 2px; height: 38px; background: var(--text-secondary); margin-left: -1px; }
+    .analog-face .sec-hand { width: 1px; height: 42px; background: var(--accent); margin-left: -0.5px; }
+    .analog-face .center-dot {
+      position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
+      background: var(--text-primary); border-radius: 50%; transform: translate(-50%, -50%);
+    }
+    .analog-face .tick {
+      position: absolute; top: 6px; left: 50%; width: 1.5px; transform-origin: bottom center;
+      background: var(--text-muted); border-radius: 1px;
+    }
+
+    /* Weather badge */
+    .weather-badge {
+      position: absolute; right: -8px; bottom: 12px; z-index: 5;
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; cursor: default;
+      transition: all 0.3s;
+    }
+    .weather-tooltip {
+      position: absolute; bottom: calc(100% + 6px); right: 0;
+      background: rgba(58,69,86,0.88); color: #E8ECEF; padding: 7px 12px;
+      border-radius: 10px; font-size: 11px; font-weight: 600;
+      white-space: nowrap; opacity: 0; pointer-events: none;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      box-shadow: 3px 3px 8px rgba(163,177,198,0.4);
+      transition: opacity 0.25s, transform 0.25s;
+      transform: translateY(3px); z-index: 10;
+    }
+    .weather-badge:hover .weather-tooltip { opacity: 1; transform: translateY(0); }
+
+    /* Icon buttons row */
+    .icon-row { display: flex; gap: 14px; margin-bottom: 22px; }
+    .icon-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; transition: all 0.15s;
+      color: var(--text-secondary);
+    }
+    .icon-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .icon-btn:active, .icon-btn.pressed {
+      box-shadow: var(--neu-inset-sm); transform: scale(0.95);
+    }
+    .icon-btn.active {
+      background: var(--accent); color: #fff;
+      box-shadow: 2px 2px 5px rgba(120,160,110,0.4), -2px -2px 5px rgba(255,255,255,0.4);
+    }
+
+    /* Toggle rows */
+    .toggle-row {
+      width: 100%; display: flex; align-items: center;
+      padding: 12px 18px; border-radius: 16px;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .toggle-row:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .toggle-row:active { box-shadow: var(--neu-inset-sm); }
+    .toggle-label { flex: 1; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .toggle-track {
+      width: 44px; height: 24px; border-radius: 999px; position: relative;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      transition: background 0.3s; flex-shrink: 0;
+    }
+    .toggle-track.on { background: var(--accent); }
+    .toggle-thumb {
+      position: absolute; top: 2px; width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; box-shadow: var(--neu-shadow-xs);
+      transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toggle-thumb.off { left: 2px; }
+    .toggle-thumb.on { left: 22px; }
+
+    /* Refresh button */
+    .refresh-btn {
+      width: 32px; height: 32px; border-radius: 10px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; margin-top: 4px;
+      color: var(--text-muted);
+    }
+    .refresh-btn:hover { color: var(--text-primary); box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .refresh-btn:active { box-shadow: var(--neu-inset-sm); }
+    .refresh-btn svg { transition: transform 0.4s ease; }
+    .refresh-btn.spinning svg { transform: rotate(360deg); }
+
+    /* ========== Modal ========== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(58,69,86,0.25);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      width: 90%; max-width: 400px; background: var(--neu-bg); border-radius: 24px;
+      box-shadow: var(--neu-shadow); padding: 28px 24px;
+      transform: translateY(10px); transition: transform 0.3s;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-box h2 { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+    .modal-box .modal-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+    .modal-box textarea {
+      width: 100%; padding: 14px; border-radius: 14px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      font-size: 13px; color: var(--text-primary); resize: none;
+      outline: none; min-height: 120px; line-height: 1.6;
+      font-family: var(--font-family);
+    }
+    .modal-box textarea::placeholder { color: #9ba8b8; }
+    .modal-box textarea:focus {
+      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .modal-btn {
+      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 700; transition: all 0.2s;
+    }
+    .modal-btn.cancel {
+      background: var(--neu-bg); color: var(--text-secondary);
+      box-shadow: var(--neu-shadow-xs);
+    }
+    .modal-btn.cancel:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .modal-btn.save {
+      background: var(--accent); color: #fff;
+      box-shadow: var(--neu-shadow-xs);
+    }
+    .modal-btn.save:hover { box-shadow: 2px 2px 4px rgba(120,160,110,0.5), -2px -2px 4px rgba(255,255,255,0.4); }
+
+    /* Mood selector in modal */
+    .mood-row { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
+    .mood-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      font-size: 18px; cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mood-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .mood-btn.selected { box-shadow: var(--neu-inset); background: var(--accent); }
+
+    /* Gratitude list */
+    .gratitude-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .gratitude-item {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .gratitude-item input {
+      flex: 1; padding: 10px 12px; border-radius: 10px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      font-size: 13px; color: var(--text-primary); outline: none;
+    }
+    .gratitude-item input:focus {
+      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
+    }
+    .gratitude-num {
+      width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+      color: #fff; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* Settings gear */
+    .settings-btn {
+      position: absolute; top: 12px; right: 14px; z-index: 5;
+      width: 28px; height: 28px; border-radius: 8px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-muted); transition: all 0.2s;
+    }
+    .settings-btn:hover { color: var(--text-primary); }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+      background: var(--text-primary); color: var(--neu-bg); padding: 14px 28px; border-radius: 16px;
+      font-size: 14px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200;
+      box-shadow: var(--neu-shadow);
+    }
+    #toast.show { bottom: 40px; }
+
+    /* Date info */
+    .date-info {
+      font-size: 11px; color: var(--text-muted); font-weight: 600;
+      margin-bottom: 4px; letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-container">
+  <!-- ===== Onboarding Window ===== -->
+  <div class="window" id="onboardingWindow">
+    <div class="title-bar">
+      <div class="dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="bar-title">Ritual Tracker</div>
+      <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" onclick="moveStep(-1)" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="nav-btn" id="nextBtn" onclick="moveStep(1)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- Step 1: Location -->
+      <div class="step active" id="step1">
+        <h1>Your Location</h1>
+        <p>Select your region and city. This determines the timezone and weather for your widget.</p>
+        <label class="label-text">Region</label>
+        <select id="regionSelect" onchange="onRegionChange()">
+          <option value="Asia">Asia</option>
+          <option value="Europe">Europe</option>
+          <option value="Americas">Americas</option>
+          <option value="Africa">Africa</option>
+          <option value="Oceania">Oceania</option>
+        </select>
+        <label class="label-text">City</label>
+        <select id="citySelect" onchange="onCityChange()"></select>
+        <div style="margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm);">
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Preview</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 22px;" id="previewWeather">--</span>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);" id="previewTime">--:--</div>
+              <div style="font-size: 11px; color: var(--text-muted);" id="previewCity">Seoul</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Clock & Display -->
+      <div class="step" id="step2">
+        <h1>Clock Style</h1>
+        <p>Choose how your clock looks. You can also pick a custom accent color.</p>
+        <label class="label-text">Clock Type</label>
+        <div class="option-row">
+          <button class="option-card selected" id="optDigital" onclick="selectClock('digital')">
+            <span class="option-icon">07:30</span>
+            Digital
+          </button>
+          <button class="option-card" id="optAnalog" onclick="selectClock('analog')">
+            <span class="option-icon">&#x1F553;</span>
+            Analog
+          </button>
+        </div>
+        <label class="label-text">Accent Color</label>
+        <input type="color" id="accentColorPicker" value="#a8c5a0" oninput="onAccentChange()">
+        <label class="label-text">Toggle Labels</label>
+        <input type="text" id="label1Input" value="Morning Page" placeholder="First toggle label">
+        <input type="text" id="label2Input" value="Daily Diary" placeholder="Second toggle label">
+      </div>
+
+      <!-- Step 3: Notion Integration -->
+      <div class="step" id="step3">
+        <h1>Connect Notion</h1>
+        <p>Link your Notion database to automatically save your morning pages, mood, and gratitude entries.</p>
+        <label class="label-text">Notion Database ID</label>
+        <input type="text" id="notionDbId" placeholder="e.g. abc123def456...">
+        <label class="label-text">Integration Token</label>
+        <input type="text" id="notionToken" placeholder="secret_...">
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+          OAuth 2.0 integration coming soon. For now, you can enter your internal integration token. Leave empty to use local storage only.
+        </p>
+        <button class="apply-btn" onclick="finishOnboarding()">Launch Widget</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== Widget ===== -->
+  <div class="widget-frame" id="widgetFrame">
+    <button class="settings-btn" onclick="openOnboarding()" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+
+    <div class="date-info" id="dateInfo"></div>
+
+    <!-- Clock -->
+    <div class="clock-wrap" id="clockWrap">
+      <div class="clock-ring-bg"></div>
+      <svg class="clock-svg" viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r="72" fill="none" stroke="rgba(163,177,198,0.2)" stroke-width="10" />
+        <circle id="progressRing" cx="80" cy="80" r="72" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="452.39" stroke-dashoffset="452.39" />
+      </svg>
+      <div class="clock-inner" id="clockInner">
+        <span class="clock-time" id="clockTime">07:30</span>
+      </div>
+      <div class="weather-badge" id="weatherBadge">
+        <span id="weatherIcon">--</span>
+        <div class="weather-tooltip" id="weatherTooltip">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Icon buttons -->
+    <div class="icon-row">
+      <button class="icon-btn" id="iconBtn0" onclick="clickIcon(0)" title="Mood">&#x1F60A;</button>
+      <button class="icon-btn" id="iconBtn1" onclick="clickIcon(1)" title="Sparkle">&#x2728;</button>
+      <button class="icon-btn" id="iconBtn2" onclick="clickIcon(2)" title="Cloud">&#x2601;</button>
+    </div>
+
+    <!-- Toggle rows -->
+    <div class="toggle-row" id="toggleRow0" onclick="openModal(0)">
+      <span class="toggle-label" id="toggleLabel0">Morning Page</span>
+      <div class="toggle-track" id="toggleTrack0">
+        <div class="toggle-thumb off" id="toggleThumb0"></div>
+      </div>
+    </div>
+    <div class="toggle-row" id="toggleRow1" onclick="openModal(1)">
+      <span class="toggle-label" id="toggleLabel1">Daily Diary</span>
+      <div class="toggle-track" id="toggleTrack1">
+        <div class="toggle-thumb off" id="toggleThumb1"></div>
+      </div>
+    </div>
+
+    <!-- Refresh -->
+    <button class="refresh-btn" id="refreshBtn" onclick="refreshWidget()" title="Refresh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ===== Modals ===== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <!-- Morning Page Modal -->
+  <div class="modal-box" id="modalMorning" style="display:none;">
+    <h2>Morning Page</h2>
+    <div class="modal-sub">Write freely. No rules, no judgment.</div>
+    <label class="label-text">How are you feeling?</label>
+    <div class="mood-row" id="moodRow">
+      <button class="mood-btn" data-mood="great" onclick="selectMood(this)">&#x1F60A;</button>
+      <button class="mood-btn" data-mood="good" onclick="selectMood(this)">&#x1F642;</button>
+      <button class="mood-btn" data-mood="okay" onclick="selectMood(this)">&#x1F610;</button>
+      <button class="mood-btn" data-mood="bad" onclick="selectMood(this)">&#x1F614;</button>
+      <button class="mood-btn" data-mood="awful" onclick="selectMood(this)">&#x1F622;</button>
+    </div>
+    <textarea id="morningText" placeholder="Start writing your thoughts..."></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn save" onclick="saveMorning()">Save</button>
+    </div>
+  </div>
+
+  <!-- Daily Diary (Gratitude) Modal -->
+  <div class="modal-box" id="modalDiary" style="display:none;">
+    <h2>Daily Diary</h2>
+    <div class="modal-sub">Write down 3 things you're grateful for today.</div>
+    <div class="gratitude-list" id="gratitudeList">
+      <div class="gratitude-item">
+        <span class="gratitude-num">1</span>
+        <input type="text" placeholder="I'm grateful for..." id="grat0">
+      </div>
+      <div class="gratitude-item">
+        <span class="gratitude-num">2</span>
+        <input type="text" placeholder="I'm grateful for..." id="grat1">
+      </div>
+      <div class="gratitude-item">
+        <span class="gratitude-num">3</span>
+        <input type="text" placeholder="I'm grateful for..." id="grat2">
+      </div>
+    </div>
+    <label class="label-text" style="margin-top: 10px;">Anything else?</label>
+    <textarea id="diaryText" placeholder="How was your day?"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn save" onclick="saveDiary()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ===== Data =====
+  const STORAGE_KEY = 'ritual-tracker-config';
+  const DATA_KEY = 'ritual-tracker-data';
+
+  const CITIES = {
+    Asia: [
+      { name: 'Seoul', tz: 'Asia/Seoul', lat: 37.57, lon: 126.98 },
+      { name: 'Tokyo', tz: 'Asia/Tokyo', lat: 35.68, lon: 139.69 },
+      { name: 'Shanghai', tz: 'Asia/Shanghai', lat: 31.23, lon: 121.47 },
+      { name: 'Singapore', tz: 'Asia/Singapore', lat: 1.35, lon: 103.82 },
+      { name: 'Bangkok', tz: 'Asia/Bangkok', lat: 13.76, lon: 100.50 },
+      { name: 'Mumbai', tz: 'Asia/Kolkata', lat: 19.08, lon: 72.88 },
+      { name: 'Dubai', tz: 'Asia/Dubai', lat: 25.20, lon: 55.27 },
+      { name: 'Hong Kong', tz: 'Asia/Hong_Kong', lat: 22.32, lon: 114.17 },
+      { name: 'Taipei', tz: 'Asia/Taipei', lat: 25.03, lon: 121.57 },
+      { name: 'Jakarta', tz: 'Asia/Jakarta', lat: -6.21, lon: 106.85 },
+    ],
+    Europe: [
+      { name: 'London', tz: 'Europe/London', lat: 51.51, lon: -0.13 },
+      { name: 'Paris', tz: 'Europe/Paris', lat: 48.86, lon: 2.35 },
+      { name: 'Berlin', tz: 'Europe/Berlin', lat: 52.52, lon: 13.41 },
+      { name: 'Madrid', tz: 'Europe/Madrid', lat: 40.42, lon: -3.70 },
+      { name: 'Rome', tz: 'Europe/Rome', lat: 41.90, lon: 12.50 },
+      { name: 'Amsterdam', tz: 'Europe/Amsterdam', lat: 52.37, lon: 4.90 },
+      { name: 'Stockholm', tz: 'Europe/Stockholm', lat: 59.33, lon: 18.07 },
+      { name: 'Istanbul', tz: 'Europe/Istanbul', lat: 41.01, lon: 28.98 },
+    ],
+    Americas: [
+      { name: 'New York', tz: 'America/New_York', lat: 40.71, lon: -74.01 },
+      { name: 'Los Angeles', tz: 'America/Los_Angeles', lat: 34.05, lon: -118.24 },
+      { name: 'Chicago', tz: 'America/Chicago', lat: 41.88, lon: -87.63 },
+      { name: 'Toronto', tz: 'Canada/Eastern', lat: 43.65, lon: -79.38 },
+      { name: 'Mexico City', tz: 'America/Mexico_City', lat: 19.43, lon: -99.13 },
+      { name: 'Sao Paulo', tz: 'America/Sao_Paulo', lat: -23.55, lon: -46.63 },
+      { name: 'Buenos Aires', tz: 'America/Argentina/Buenos_Aires', lat: -34.60, lon: -58.38 },
+    ],
+    Africa: [
+      { name: 'Cairo', tz: 'Africa/Cairo', lat: 30.04, lon: 31.24 },
+      { name: 'Lagos', tz: 'Africa/Lagos', lat: 6.52, lon: 3.38 },
+      { name: 'Johannesburg', tz: 'Africa/Johannesburg', lat: -26.20, lon: 28.05 },
+      { name: 'Nairobi', tz: 'Africa/Nairobi', lat: -1.29, lon: 36.82 },
+      { name: 'Casablanca', tz: 'Africa/Casablanca', lat: 33.57, lon: -7.59 },
+    ],
+    Oceania: [
+      { name: 'Sydney', tz: 'Australia/Sydney', lat: -33.87, lon: 151.21 },
+      { name: 'Melbourne', tz: 'Australia/Melbourne', lat: -37.81, lon: 144.96 },
+      { name: 'Auckland', tz: 'Pacific/Auckland', lat: -36.85, lon: 174.76 },
+    ],
+  };
+
+  const WMO_ICONS = {
+    0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+    45: '🌫️', 48: '🌫️',
+    51: '🌦️', 53: '🌦️', 55: '🌧️',
+    61: '🌧️', 63: '🌧️', 65: '🌧️',
+    71: '🌨️', 73: '🌨️', 75: '❄️',
+    80: '🌦️', 81: '🌧️', 82: '⛈️',
+    95: '⛈️', 96: '⛈️', 99: '⛈️',
+  };
+
+  function getWmoIcon(code) { return WMO_ICONS[code] || '🌡️'; }
+
+  // ===== State =====
+  let config = loadConfig();
+  let todayData = loadTodayData();
+  let currentStep = 1;
+  let currentModal = -1;
+  let selectedMood = '';
+  let clockInterval = null;
+  let weatherCache = null;
+
+  function loadConfig() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return {
+      region: 'Asia',
+      city: 'Seoul',
+      tz: 'Asia/Seoul',
+      lat: 37.57,
+      lon: 126.98,
+      clockType: 'digital',
+      accent: '#a8c5a0',
+      label1: 'Morning Page',
+      label2: 'Daily Diary',
+      notionDbId: '',
+      notionToken: '',
+      onboardingDone: false,
+    };
+  }
+
+  function saveConfig() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (_) {}
+  }
+
+  function todayKey() {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function loadTodayData() {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      if (raw) {
+        const all = JSON.parse(raw);
+        return all[todayKey()] || { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+      }
+    } catch (_) {}
+    return { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+  }
+
+  function saveTodayData() {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      const all = raw ? JSON.parse(raw) : {};
+      all[todayKey()] = todayData;
+      localStorage.setItem(DATA_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  // ===== Onboarding =====
+  function populateCities() {
+    const sel = document.getElementById('citySelect');
+    const cities = CITIES[config.region] || CITIES.Asia;
+    sel.innerHTML = cities.map(c => `<option value="${c.name}" ${c.name === config.city ? 'selected' : ''}>${c.name}</option>`).join('');
+    onCityChange();
+  }
+
+  function onRegionChange() {
+    config.region = document.getElementById('regionSelect').value;
+    config.city = (CITIES[config.region] || CITIES.Asia)[0].name;
+    populateCities();
+  }
+
+  function onCityChange() {
+    const cityName = document.getElementById('citySelect').value;
+    const cities = CITIES[config.region] || CITIES.Asia;
+    const c = cities.find(x => x.name === cityName) || cities[0];
+    config.city = c.name; config.tz = c.tz; config.lat = c.lat; config.lon = c.lon;
+    updatePreviewTime();
+    fetchWeatherPreview();
+  }
+
+  function updatePreviewTime() {
+    try {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { timeZone: config.tz, hour: '2-digit', minute: '2-digit', hour12: false });
+      document.getElementById('previewTime').textContent = timeStr;
+      document.getElementById('previewCity').textContent = config.city;
+    } catch (_) {
+      document.getElementById('previewTime').textContent = '--:--';
+    }
+  }
+
+  async function fetchWeatherPreview() {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${config.lat}&longitude=${config.lon}&current=temperature_2m,weather_code&timezone=auto`;
+      const res = await fetch(url);
+      const data = await res.json();
+      weatherCache = data.current;
+      const icon = getWmoIcon(data.current.weather_code);
+      const temp = Math.round(data.current.temperature_2m);
+      document.getElementById('previewWeather').textContent = icon;
+      document.getElementById('weatherIcon').textContent = icon;
+      document.getElementById('weatherTooltip').textContent = `${config.city}  ${temp}°C`;
+    } catch (_) {
+      document.getElementById('previewWeather').textContent = '🌡️';
+    }
+  }
+
+  function selectClock(type) {
+    config.clockType = type;
+    document.getElementById('optDigital').classList.toggle('selected', type === 'digital');
+    document.getElementById('optAnalog').classList.toggle('selected', type === 'analog');
+    renderClock();
+  }
+
+  function onAccentChange() {
+    config.accent = document.getElementById('accentColorPicker').value;
+    document.documentElement.style.setProperty('--accent', config.accent);
+  }
+
+  function moveStep(n) {
+    const nextStep = currentStep + n;
+    if (nextStep < 1 || nextStep > 3) return;
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    currentStep = nextStep;
+    document.getElementById(`step${currentStep}`).classList.add('active');
+    document.getElementById('prevBtn').disabled = (currentStep === 1);
+  }
+
+  function finishOnboarding() {
+    config.label1 = document.getElementById('label1Input').value || 'Morning Page';
+    config.label2 = document.getElementById('label2Input').value || 'Daily Diary';
+    config.notionDbId = document.getElementById('notionDbId').value;
+    config.notionToken = document.getElementById('notionToken').value;
+    config.onboardingDone = true;
+    saveConfig();
+    document.getElementById('onboardingWindow').classList.add('hidden');
+    initWidget();
+    showToast('Widget is ready!');
+  }
+
+  function openOnboarding() {
+    document.getElementById('onboardingWindow').classList.remove('hidden');
+    // Sync form with current config
+    document.getElementById('regionSelect').value = config.region;
+    populateCities();
+    document.getElementById('accentColorPicker').value = config.accent;
+    document.getElementById('label1Input').value = config.label1;
+    document.getElementById('label2Input').value = config.label2;
+    document.getElementById('notionDbId').value = config.notionDbId;
+    document.getElementById('notionToken').value = config.notionToken;
+    selectClock(config.clockType);
+  }
+
+  // ===== Widget =====
+  function initWidget() {
+    document.documentElement.style.setProperty('--accent', config.accent);
+    document.getElementById('toggleLabel0').textContent = config.label1;
+    document.getElementById('toggleLabel1').textContent = config.label2;
+    todayData = loadTodayData();
+    updateToggles();
+    renderClock();
+    startClock();
+    fetchWeather();
+    updateDateInfo();
+  }
+
+  function updateDateInfo() {
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    document.getElementById('dateInfo').textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+  }
+
+  function updateToggles() {
+    setToggle(0, todayData.morningDone);
+    setToggle(1, todayData.diaryDone);
+  }
+
+  function setToggle(idx, on) {
+    const track = document.getElementById(`toggleTrack${idx}`);
+    const thumb = document.getElementById(`toggleThumb${idx}`);
+    track.classList.toggle('on', on);
+    thumb.classList.toggle('on', on);
+    thumb.classList.toggle('off', !on);
+  }
+
+  // ===== Clock =====
+  function getNow() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+  }
+
+  function renderClock() {
+    const inner = document.getElementById('clockInner');
+    if (config.clockType === 'analog') {
+      inner.innerHTML = '<div class="analog-face" id="analogFace"></div>';
+      const face = document.getElementById('analogFace');
+      // Ticks
+      for (let i = 0; i < 12; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        const angle = i * 30;
+        const isMajor = i % 3 === 0;
+        tick.style.height = isMajor ? '10px' : '6px';
+        tick.style.width = isMajor ? '2px' : '1.5px';
+        tick.style.transformOrigin = `center ${68 - 6}px`;
+        tick.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+        tick.style.opacity = isMajor ? '0.6' : '0.3';
+        face.appendChild(tick);
+      }
+      face.innerHTML += '<div class="hand hour-hand" id="hourHand"></div><div class="hand min-hand" id="minHand"></div><div class="hand sec-hand" id="secHand"></div><div class="center-dot"></div>';
+      updateAnalogHands();
+    } else {
+      const now = getNow();
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      inner.innerHTML = `<span class="clock-time" id="clockTime">${timeStr}</span>`;
+    }
+    updateProgressRing();
+  }
+
+  function updateAnalogHands() {
+    const now = getNow();
+    const h = now.getHours() % 12, m = now.getMinutes(), s = now.getSeconds();
+    const hDeg = (h * 30) + (m * 0.5);
+    const mDeg = m * 6;
+    const sDeg = s * 6;
+    const hourEl = document.getElementById('hourHand');
+    const minEl = document.getElementById('minHand');
+    const secEl = document.getElementById('secHand');
+    if (hourEl) hourEl.style.transform = `translateX(-50%) rotate(${hDeg}deg)`;
+    if (minEl) minEl.style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+    if (secEl) secEl.style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+  }
+
+  function updateProgressRing() {
+    const now = getNow();
+    const totalMin = now.getHours() * 60 + now.getMinutes();
+    const progress = totalMin / (24 * 60);
+    const circumference = 2 * Math.PI * 72;
+    const offset = circumference * (1 - progress);
+    document.getElementById('progressRing').setAttribute('stroke-dashoffset', offset);
+  }
+
+  function startClock() {
+    if (clockInterval) clearInterval(clockInterval);
+    clockInterval = setInterval(() => {
+      if (config.clockType === 'digital') {
+        const now = getNow();
+        const el = document.getElementById('clockTime');
+        if (el) el.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else {
+        updateAnalogHands();
+      }
+      updateProgressRing();
+    }, 1000);
+  }
+
+  // ===== Weather =====
+  async function fetchWeather() {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${config.lat}&longitude=${config.lon}&current=temperature_2m,weather_code&timezone=auto`;
+      const res = await fetch(url);
+      const data = await res.json();
+      weatherCache = data.current;
+      const icon = getWmoIcon(data.current.weather_code);
+      const temp = Math.round(data.current.temperature_2m);
+      document.getElementById('weatherIcon').textContent = icon;
+      document.getElementById('weatherTooltip').textContent = `${config.city}  ${temp}°C`;
+    } catch (_) {
+      document.getElementById('weatherIcon').textContent = '🌡️';
+      document.getElementById('weatherTooltip').textContent = 'Unable to load';
+    }
+  }
+
+  // ===== Icon Buttons (Clicker) =====
+  const iconStates = [0, 0, 0];
+  function clickIcon(idx) {
+    const btn = document.getElementById(`iconBtn${idx}`);
+    iconStates[idx] = iconStates[idx] ? 0 : 1;
+    btn.classList.toggle('active', !!iconStates[idx]);
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 150);
+  }
+
+  // ===== Modals =====
+  function openModal(idx) {
+    currentModal = idx;
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalMorning').style.display = idx === 0 ? 'block' : 'none';
+    document.getElementById('modalDiary').style.display = idx === 1 ? 'block' : 'none';
+
+    if (idx === 0) {
+      document.getElementById('morningText').value = todayData.morning || '';
+      selectedMood = todayData.mood || '';
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', b.dataset.mood === selectedMood));
+    } else {
+      document.getElementById('diaryText').value = todayData.diary || '';
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`grat${i}`).value = (todayData.gratitude && todayData.gratitude[i]) || '';
+      }
+    }
+    overlay.classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    currentModal = -1;
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  function selectMood(btn) {
+    selectedMood = btn.dataset.mood;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', b.dataset.mood === selectedMood));
+  }
+
+  function saveMorning() {
+    todayData.morning = document.getElementById('morningText').value;
+    todayData.mood = selectedMood;
+    todayData.morningDone = !!(todayData.morning.trim() || todayData.mood);
+    saveTodayData();
+    updateToggles();
+    closeModal();
+    showToast('Morning page saved!');
+  }
+
+  function saveDiary() {
+    todayData.gratitude = [
+      document.getElementById('grat0').value,
+      document.getElementById('grat1').value,
+      document.getElementById('grat2').value,
+    ];
+    todayData.diary = document.getElementById('diaryText').value;
+    todayData.diaryDone = !!(todayData.diary.trim() || todayData.gratitude.some(g => g.trim()));
+    saveTodayData();
+    updateToggles();
+    closeModal();
+    showToast('Daily diary saved!');
+  }
+
+  // ===== Refresh =====
+  function refreshWidget() {
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+    setTimeout(() => btn.classList.remove('spinning'), 500);
+    todayData = loadTodayData();
+    updateToggles();
+    fetchWeather();
+    updateDateInfo();
+    renderClock();
+  }
+
+  // ===== Toast =====
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ===== Init =====
+  window.onload = () => {
+    document.getElementById('regionSelect').value = config.region;
+    populateCities();
+    document.documentElement.style.setProperty('--accent', config.accent);
+
+    if (config.onboardingDone) {
+      document.getElementById('onboardingWindow').classList.add('hidden');
+      initWidget();
+    } else {
+      initWidget();
+    }
+  };
+</script>
+</body>
+</html>
