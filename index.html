@@ -1002,7 +1002,7 @@
     if (currentStep === 4) generateEmbedLink();
   }
 
-  function generateEmbedLink() {
+  async function generateEmbedLink() {
     var embedConfig = {
       region: config.region,
       city: config.city,
@@ -1026,9 +1026,24 @@
         databaseName: config.notion.databaseName,
       };
     }
-    var hash = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(embedConfig)))));
-    var url = window.location.origin + window.location.pathname + '#cfg=' + hash;
-    document.getElementById('embedLinkDisplay').textContent = url;
+
+    var display = document.getElementById('embedLinkDisplay');
+    display.textContent = 'Generating link...';
+
+    try {
+      var res = await fetch(config.proxyUrl + '/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(embedConfig),
+      });
+      if (!res.ok) throw new Error('Server error');
+      var data = await res.json();
+      var url = window.location.origin + window.location.pathname + '#p=' + encodeURIComponent(config.proxyUrl) + '&id=' + data.id;
+      display.textContent = url;
+    } catch (err) {
+      display.textContent = 'Failed to generate link. Check proxy server.';
+      console.error(err);
+    }
   }
 
   function copyEmbedLink() {
@@ -1528,43 +1543,55 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  // ===== Embed Config from URL Hash =====
-  function loadEmbedConfig() {
+  // ===== Embed Config from URL Hash (server-side) =====
+  function applyEmbedConfig(embedConfig) {
+    config.region = embedConfig.region || config.region;
+    config.city = embedConfig.city || config.city;
+    config.tz = embedConfig.tz || config.tz;
+    config.lat = embedConfig.lat || config.lat;
+    config.lon = embedConfig.lon || config.lon;
+    config.clockType = embedConfig.clockType || config.clockType;
+    config.bgColor = embedConfig.bgColor || config.bgColor;
+    config.textColor = embedConfig.textColor || config.textColor;
+    config.accent = embedConfig.accent || config.accent;
+    config.label1 = embedConfig.label1 || config.label1;
+    config.label2 = embedConfig.label2 || config.label2;
+    config.link1 = embedConfig.link1 || config.link1;
+    config.link2 = embedConfig.link2 || config.link2;
+    config.proxyUrl = embedConfig.proxyUrl || config.proxyUrl;
+    if (embedConfig.notion) {
+      config.notion = embedConfig.notion;
+    }
+    config.onboardingDone = true;
+  }
+
+  async function loadEmbedConfig() {
     var hash = window.location.hash;
-    if (!hash || !hash.startsWith('#cfg=')) return false;
+    if (!hash || hash.indexOf('id=') === -1) return false;
+    // Parse hash params: #p=<proxyUrl>&id=<configId>
+    var params = {};
+    hash.slice(1).split('&').forEach(function(part) {
+      var kv = part.split('=');
+      if (kv.length === 2) params[kv[0]] = decodeURIComponent(kv[1]);
+    });
+    var proxyUrl = params.p;
+    var configId = params.id;
+    if (!proxyUrl || !configId) return false;
     try {
-      var encoded = decodeURIComponent(hash.slice(5));
-      var json = decodeURIComponent(escape(atob(encoded)));
-      var embedConfig = JSON.parse(json);
-      // Apply embed config
-      config.region = embedConfig.region || config.region;
-      config.city = embedConfig.city || config.city;
-      config.tz = embedConfig.tz || config.tz;
-      config.lat = embedConfig.lat || config.lat;
-      config.lon = embedConfig.lon || config.lon;
-      config.clockType = embedConfig.clockType || config.clockType;
-      config.bgColor = embedConfig.bgColor || config.bgColor;
-      config.textColor = embedConfig.textColor || config.textColor;
-      config.accent = embedConfig.accent || config.accent;
-      config.label1 = embedConfig.label1 || config.label1;
-      config.label2 = embedConfig.label2 || config.label2;
-      config.link1 = embedConfig.link1 || config.link1;
-      config.link2 = embedConfig.link2 || config.link2;
-      config.proxyUrl = embedConfig.proxyUrl || config.proxyUrl;
-      if (embedConfig.notion) {
-        config.notion = embedConfig.notion;
-      }
-      config.onboardingDone = true;
+      var res = await fetch(proxyUrl + '/api/config/' + configId);
+      if (!res.ok) throw new Error('Config not found');
+      var embedConfig = await res.json();
+      applyEmbedConfig(embedConfig);
       return true;
     } catch (e) {
-      console.error('Failed to parse embed config:', e);
+      console.error('Failed to load embed config:', e);
       return false;
     }
   }
 
   // ===== Init =====
-  window.onload = () => {
-    var isEmbed = loadEmbedConfig();
+  window.onload = async () => {
+    var isEmbed = await loadEmbedConfig();
     document.getElementById('regionSelect').value = config.region;
     populateCities();
     document.getElementById('bgColorPicker').value = config.bgColor || '#E8ECEF';
