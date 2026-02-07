@@ -17,41 +17,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'ritual-tracker-proxy' });
 });
 
-// Token Exchange
-app.post('/auth/token', async (req, res) => {
-  const { code, redirect_uri } = req.body;
-  if (!code) return res.status(400).json({ error: 'Missing "code" parameter' });
-  if (!redirect_uri) return res.status(400).json({ error: 'Missing "redirect_uri" parameter' });
-
-  const clientId = process.env.NOTION_CLIENT_ID;
-  const clientSecret = process.env.NOTION_CLIENT_SECRET;
-  if (!clientId || !clientSecret) {
-    return res.status(500).json({ error: 'Server misconfigured: missing Notion credentials' });
-  }
-
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-  try {
-    const tokenRes = await fetch(`${NOTION_API}/v1/oauth/token`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${credentials}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri,
-      }),
-    });
-
-    const tokenData = await tokenRes.json();
-    res.status(tokenRes.status).json(tokenData);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to exchange token' });
-  }
-});
-
 // Notion API Proxy
 app.all('/api/notion/*', async (req, res) => {
   const token = req.headers['x-notion-token'];
