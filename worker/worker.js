@@ -2,8 +2,8 @@
  * Ritual Tracker — Notion OAuth Proxy (Cloudflare Worker)
  *
  * This worker handles:
- *   1. POST /auth/token   — Exchange OAuth code for access token
- *   2. POST /api/notion/* — Proxy requests to Notion API (bypasses CORS)
+ *   1. POST /auth/token        — Exchange OAuth code for access token
+ *   2. * /api/notion/*         — Proxy requests to Notion API (bypasses CORS)
  *
  * Environment variables (set via `wrangler secret put`):
  *   NOTION_CLIENT_ID     — Your Notion OAuth app client ID
@@ -17,7 +17,7 @@ const NOTION_API = 'https://api.notion.com';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, X-Notion-Token',
   'Access-Control-Max-Age': '86400',
 };
@@ -49,7 +49,7 @@ export default {
     }
 
     // ===== 2. Notion API Proxy =====
-    if (path.startsWith('/api/notion/') && request.method === 'POST') {
+    if (path.startsWith('/api/notion/')) {
       return handleNotionProxy(request, path);
     }
 
@@ -124,22 +124,26 @@ async function handleNotionProxy(request, path) {
   const notionPath = path.replace('/api/notion', '');
   const notionUrl = `${NOTION_API}/v1${notionPath}`;
 
-  let body = null;
-  try {
-    body = await request.text();
-  } catch {
-    // no body
-  }
-
-  const notionRes = await fetch(notionUrl, {
+  const fetchOptions = {
     method: request.method,
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
       'Notion-Version': '2022-06-28',
     },
-    body: body || undefined,
-  });
+  };
+
+  // Only read body for methods that support it
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    try {
+      const body = await request.text();
+      if (body) fetchOptions.body = body;
+    } catch {
+      // no body
+    }
+  }
+
+  const notionRes = await fetch(notionUrl, fetchOptions);
 
   const data = await notionRes.text();
 

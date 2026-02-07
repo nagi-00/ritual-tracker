@@ -1070,16 +1070,19 @@
 
   function disconnectNotion() { config.notion = null; saveConfig(); renderNotionStep(); showToast('Notion disconnected.'); }
 
+  // ===== Notion API Layer =====
   async function notionFetch(endpoint, options = {}) {
     if (!config.notion || !config.notion.accessToken || !OAUTH_PROXY_URL) return null;
     try {
-      const res = await fetch(`${OAUTH_PROXY_URL}/api/notion${endpoint}`, {
+      const fetchOpts = {
         method: options.method || 'GET',
         headers: { 'Content-Type': 'application/json', 'X-Notion-Token': config.notion.accessToken },
-        body: options.body ? JSON.stringify(options.body) : undefined,
-      });
+      };
+      if (options.body) fetchOpts.body = JSON.stringify(options.body);
+      const res = await fetch(`${OAUTH_PROXY_URL}/api/notion${endpoint}`, fetchOpts);
       if (!res.ok) throw new Error(`Notion API ${res.status}`);
-      return await res.json();
+      const text = await res.text();
+      return text ? JSON.parse(text) : {};
     } catch (err) { console.error('Notion API error:', err); return null; }
   }
 
@@ -1094,42 +1097,152 @@
       }).join('');
   }
 
-  function onNotionDbSelect() {
+  async function onNotionDbSelect() {
     const sel = document.getElementById('notionDbSelect');
     const opt = sel.options[sel.selectedIndex];
-    if (config.notion) {
-      config.notion.databaseId = sel.value; config.notion.databaseName = opt ? opt.textContent : '';
-      document.getElementById('notionDbName').textContent = config.notion.databaseName || 'Not selected'; saveConfig();
+    if (!config.notion || !sel.value) return;
+    config.notion.databaseId = sel.value;
+    config.notion.databaseName = opt ? opt.textContent : '';
+    document.getElementById('notionDbName').textContent = config.notion.databaseName || 'Not selected';
+    saveConfig();
+    await setupNotionDatabase(sel.value);
+  }
+
+  // Auto-configure database properties when a DB is selected
+  async function setupNotionDatabase(dbId) {
+    const db = await notionFetch(`/databases/${dbId}`);
+    if (!db || !db.properties) return;
+    const props = db.properties;
+    const updates = {};
+    if (!props['Date'] || props['Date'].type !== 'date') updates['Date'] = { date: {} };
+    if (!props['Mood'] || props['Mood'].type !== 'select') {
+      updates['Mood'] = { select: { options: [
+        { name: 'great', color: 'green' }, { name: 'good', color: 'blue' },
+        { name: 'okay', color: 'yellow' }, { name: 'bad', color: 'orange' }, { name: 'awful', color: 'red' },
+      ]}};
+    }
+    for (let i = 1; i <= 3; i++) {
+      const key = `Gratitude ${i}`;
+      if (!props[key] || props[key].type !== 'rich_text') updates[key] = { rich_text: {} };
+    }
+    if (Object.keys(updates).length) {
+      await notionFetch(`/databases/${dbId}`, { method: 'PATCH', body: { properties: updates } });
     }
   }
 
-  async function saveToNotion(type, content) {
-    if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
-    const dateStr = todayKey();
-    const properties = {
-      'Name': { title: [{ text: { content: `${type} — ${dateStr}` } }] },
-      'Type': { select: { name: type } },
-      'Date': { date: { start: dateStr } },
-    };
-    if (type === 'Morning Page' && content.mood) properties['Mood'] = { select: { name: content.mood } };
+  // ===== Notion Sync (Upsert) =====
+  function chunkText(text, limit) {
+    limit = limit || 2000;
+    if (!text || text.length <= limit) return [text];
+    const chunks = [];
+    for (let i = 0; i < text.length; i += limit) chunks.push(text.slice(i, i + limit));
+    return chunks;
+  }
+
+  function buildNotionChildren() {
     const children = [];
-    if (type === 'Morning Page' && content.text) {
-      children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: content.text } }] } });
+    const hasMorning = todayData.morning && todayData.morning.trim();
+    const hasGratitude = todayData.gratitude && todayData.gratitude.some(function(g) { return g.trim(); });
+    const hasDiary = todayData.diary && todayData.diary.trim();
+
+    if (hasMorning) {
+      children.push({ object: 'block', type: 'heading_2', heading_2: { rich_text: [{ type: 'text', text: { content: '\u{1F4DD} Morning Page' } }] } });
+      chunkText(todayData.morning).forEach(function(chunk) {
+        children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: chunk } }] } });
+      });
     }
-    if (type === 'Daily Diary') {
-      if (content.gratitude && content.gratitude.some(g => g.trim())) {
-        children.push({ object: 'block', type: 'heading_3', heading_3: { rich_text: [{ type: 'text', text: { content: 'Grateful for' } }] } });
-        content.gratitude.filter(g => g.trim()).forEach(g => {
-          children.push({ object: 'block', type: 'numbered_list_item', numbered_list_item: { rich_text: [{ type: 'text', text: { content: g } }] } });
+
+    if (hasMorning && (hasGratitude || hasDiary)) {
+      children.push({ object: 'block', type: 'divider', divider: {} });
+    }
+
+    if (hasGratitude || hasDiary) {
+      children.push({ object: 'block', type: 'heading_2', heading_2: { rich_text: [{ type: 'text', text: { content: '\u{1F4D3} Daily Diary' } }] } });
+      if (hasGratitude) {
+        todayData.gratitude.filter(function(g) { return g.trim(); }).forEach(function(g) {
+          children.push({ object: 'block', type: 'bulleted_list_item', bulleted_list_item: { rich_text: [{ type: 'text', text: { content: g } }] } });
         });
       }
-      if (content.text) {
-        children.push({ object: 'block', type: 'heading_3', heading_3: { rich_text: [{ type: 'text', text: { content: 'Diary' } }] } });
-        children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: content.text } }] } });
+      if (hasGratitude && hasDiary) {
+        children.push({ object: 'block', type: 'divider', divider: {} });
+      }
+      if (hasDiary) {
+        chunkText(todayData.diary).forEach(function(chunk) {
+          children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: chunk } }] } });
+        });
       }
     }
-    const result = await notionFetch('/pages', { method: 'POST', body: { parent: { database_id: config.notion.databaseId }, properties, children } });
-    if (result) showToast('Saved to Notion!');
+
+    return children;
+  }
+
+  async function findTodayPage() {
+    if (todayData.notionPageId) return todayData.notionPageId;
+    const query = await notionFetch('/databases/' + config.notion.databaseId + '/query', {
+      method: 'POST',
+      body: { filter: { property: 'Date', date: { equals: todayKey() } }, page_size: 1 }
+    });
+    if (query && query.results && query.results.length) {
+      todayData.notionPageId = query.results[0].id;
+      saveTodayData();
+      return todayData.notionPageId;
+    }
+    return null;
+  }
+
+  async function clearPageChildren(pageId) {
+    const blocks = await notionFetch('/blocks/' + pageId + '/children');
+    if (!blocks || !blocks.results) return;
+    for (var i = 0; i < blocks.results.length; i++) {
+      await notionFetch('/blocks/' + blocks.results[i].id, { method: 'DELETE' });
+    }
+  }
+
+  async function syncToNotion() {
+    if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
+    var dateStr = todayKey();
+    var d = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    var days = ['일', '월', '화', '수', '목', '금', '토'];
+    var dateLabel = dateStr + ' ' + days[d.getDay()];
+
+    var properties = {
+      'Name': { title: [{ text: { content: dateLabel } }] },
+      'Date': { date: { start: dateStr } },
+    };
+    if (todayData.mood) {
+      properties['Mood'] = { select: { name: todayData.mood } };
+    } else {
+      properties['Mood'] = { select: null };
+    }
+    var gratitude = todayData.gratitude || ['', '', ''];
+    for (var i = 0; i < 3; i++) {
+      var val = (gratitude[i] || '').trim();
+      properties['Gratitude ' + (i + 1)] = { rich_text: val ? [{ type: 'text', text: { content: val } }] : [] };
+    }
+
+    var children = buildNotionChildren();
+
+    try {
+      var pageId = await findTodayPage();
+      if (pageId) {
+        await notionFetch('/pages/' + pageId, { method: 'PATCH', body: { properties: properties } });
+        await clearPageChildren(pageId);
+        if (children.length) {
+          await notionFetch('/blocks/' + pageId + '/children', { method: 'PATCH', body: { children: children } });
+        }
+      } else {
+        var result = await notionFetch('/pages', {
+          method: 'POST',
+          body: { parent: { database_id: config.notion.databaseId }, properties: properties, children: children }
+        });
+        if (result && result.id) {
+          todayData.notionPageId = result.id;
+          saveTodayData();
+        }
+      }
+    } catch (err) {
+      console.error('Notion sync error:', err);
+    }
   }
 
   // ===== Widget =====
@@ -1325,7 +1438,7 @@
     updateToggles();
     closeModal();
     showToast('Morning page saved!');
-    saveToNotion('Morning Page', { text: todayData.morning, mood: todayData.mood });
+    syncToNotion();
   }
 
   async function saveDiary() {
@@ -1342,7 +1455,7 @@
     updateMoodIcon();
     closeModal();
     showToast('Daily diary saved!');
-    saveToNotion('Daily Diary', { text: todayData.diary, gratitude: todayData.gratitude, mood: todayData.mood });
+    syncToNotion();
   }
 
   // ===== Refresh =====
