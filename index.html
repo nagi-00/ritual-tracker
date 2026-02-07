@@ -1135,6 +1135,7 @@
         accessToken: config.notion.accessToken,
         databaseId: config.notion.databaseId,
         databaseName: config.notion.databaseName,
+        titleProperty: config.notion.titleProperty || 'Name',
       };
     }
 
@@ -1172,6 +1173,7 @@
   function finishOnboarding() {
     config.bgColor = document.getElementById('bgColorPicker').value || '#E8ECEF';
     config.textColor = document.getElementById('textColorPicker').value || '#3a4556';
+    config.accent = document.getElementById('accentColorPicker').value || '#a8c5a0';
     config.label1 = document.getElementById('label1Input').value || 'Morning Page';
     config.label2 = document.getElementById('label2Input').value || 'Daily Diary';
     config.link1 = document.getElementById('link1Input').value || '';
@@ -1280,6 +1282,17 @@
     if (!db || !db.properties) return;
     const props = db.properties;
     const updates = {};
+
+    // Detect the title property name (varies by language: "Name", "이름", "Title", etc.)
+    var titlePropName = 'Name';
+    for (var pName in props) {
+      if (props[pName].type === 'title') { titlePropName = pName; break; }
+    }
+    if (config.notion) {
+      config.notion.titleProperty = titlePropName;
+      saveConfig();
+    }
+
     if (!props['Date'] || props['Date'].type !== 'date') updates['Date'] = { date: {} };
     if (!props['Mood'] || props['Mood'].type !== 'select') {
       updates['Mood'] = { select: { options: [
@@ -1372,10 +1385,11 @@
     var days = ['일', '월', '화', '수', '목', '금', '토'];
     var dateLabel = dateStr + ' ' + days[d.getDay()];
 
+    var titleProp = (config.notion && config.notion.titleProperty) || 'Name';
     var properties = {
-      'Name': { title: [{ text: { content: dateLabel } }] },
       'Date': { date: { start: dateStr } },
     };
+    properties[titleProp] = { title: [{ text: { content: dateLabel } }] };
     if (data.mood) {
       properties['Mood'] = { select: { name: data.mood } };
     } else {
@@ -1423,6 +1437,7 @@
       }
     } catch (err) {
       console.error('Notion sync error:', err);
+      showToast('Notion sync failed. Changes saved locally.');
     }
   }
 
