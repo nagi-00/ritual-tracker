@@ -437,8 +437,8 @@
         <label class="label-text">Accent Color</label>
         <input type="color" id="accentColorPicker" value="#a8c5a0" oninput="onAccentChange()">
         <label class="label-text">Toggle Labels</label>
-        <input type="text" id="label1Input" value="Morning Page" placeholder="First toggle label">
-        <input type="text" id="label2Input" value="Daily Diary" placeholder="Second toggle label">
+        <input type="text" id="label1Input" value="Morning Page" placeholder="First toggle label" oninput="document.getElementById('toggleLabel0').textContent=this.value||'Morning Page'">
+        <input type="text" id="label2Input" value="Daily Diary" placeholder="Second toggle label" oninput="document.getElementById('toggleLabel1').textContent=this.value||'Daily Diary'">
         <label class="label-text" style="margin-top: 6px;">Shortcut Links (optional)</label>
         <input type="url" id="link1Input" placeholder="https://... (Button 2)" style="margin-bottom: 8px;">
         <input type="url" id="link2Input" placeholder="https://... (Button 3)">
