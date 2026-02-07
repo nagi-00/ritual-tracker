@@ -1036,16 +1036,6 @@
     }
   }
 
-  // Sync only background & shadow vars to onboarding window (keep text colors unchanged)
-  function syncOnboardingBg() {
-    var onboardingWin = document.getElementById('onboardingWindow');
-    if (!onboardingWin) return;
-    var vars = computeNeuVars(config.bgColor, config.textColor);
-    var bgOnlyKeys = ['--neu-bg', '--neu-dark', '--neu-light', '--neu-shadow', '--neu-shadow-sm', '--neu-shadow-xs', '--neu-inset', '--neu-inset-sm'];
-    bgOnlyKeys.forEach(function(k) {
-      if (vars[k]) onboardingWin.style.setProperty(k, vars[k]);
-    });
-  }
 
   function applyRecommendedText() {
     const bg = config.bgColor || '#E8ECEF';
@@ -1053,13 +1043,11 @@
     config.textColor = rec;
     document.getElementById('textColorPicker').value = rec;
     applyNeuTheme(config.bgColor, config.textColor);
-    syncOnboardingBg();
   }
 
   function onBgColorChange() {
     config.bgColor = document.getElementById('bgColorPicker').value;
     applyNeuTheme(config.bgColor, config.textColor);
-    syncOnboardingBg();
   }
 
   function onTextColorChange() {
