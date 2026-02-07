@@ -451,12 +451,12 @@
 
         <div id="notionStep3a">
           <label class="label-text">Notion API Token</label>
-          <input type="password" id="notionTokenInput" placeholder="ntn_..." style="margin-bottom: 10px;">
+          <input type="password" id="notionTokenInput" placeholder="ntn_...">
+          <div style="margin-bottom: 10px;"><a href="https://www.notion.so/my-integrations" target="_blank" style="font-size: 12px; color: var(--text-muted);">내 인테그레이션 바로가기 ↗</a></div>
           <button class="apply-btn" id="notionLoadDbBtn" onclick="loadDatabases()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 100 100" fill="none"><path d="M6.017 4.313l55.333-4.087c6.797-.583 8.543-.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277-1.553 6.807-6.99 7.193L24.467 99.967c-4.08.193-6.023-.39-8.16-3.113L3.3 79.94c-2.333-3.113-3.3-5.443-3.3-8.167V11.113c0-3.497 1.553-6.413 6.017-6.8z" fill="#fff"/><path d="M61.35.227L6.017 4.313C1.553 4.7 0 7.617 0 11.113v60.66c0 2.723.967 5.053 3.3 8.167l12.007 16.913c2.137 2.723 4.08 3.307 8.16 3.113l64.257-3.89c5.437-.387 6.99-2.917 6.99-7.193V20.64c0-2.21-.86-2.8-3.467-4.72l-.416-.333-17.663-12.443C69.893.037 68.147-.357 61.35.227zM25.92 19.523c-5.247.353-6.437.433-9.417-1.99L8.927 11.507c-.78-.78-.39-1.753 1.163-1.95l52.833-3.887c4.673-.39 7.003 1.17 8.753 2.527l8.94 6.5c.39.193 1.36 1.36.193 1.36l-54.5 3.27-.39.197zm-3.3 69.93V30.407c0-2.527.78-3.697 3.103-3.893l58.937-3.5c2.14-.193 3.107 1.163 3.107 3.693v58.657c0 2.53-.39 4.67-3.883 4.863l-56.403 3.313c-3.497.193-4.86-.973-4.86-3.897zm55.633-57.11c.39 1.557 0 3.113-1.557 3.307l-2.723.583v43.34c-2.333 1.363-4.473 2.14-6.22 2.14-2.917 0-3.69-.973-5.833-3.5l-17.86-28.09v27.12l5.64 1.167s0 3.113-4.277 3.113L33.3 83.14c-.39-.78 0-2.723 1.357-3.11l3.5-.973V43.727L33.3 43.34c-.39-1.557.583-3.89 3.3-4.08l14.163-.973 18.637 28.467V41.587l-4.667-.583c-.39-1.943 1.163-3.5 3.107-3.693l14.413-.967z" fill="#000"/></svg>
             Load Databases
           </button>
-          <div style="margin-top: 10px;"><a href="https://www.notion.so/my-integrations" target="_blank" style="font-size: 12px; color: var(--text-muted);">내 인테그레이션 바로가기 ↗</a></div>
         </div>
 
         <div id="notionStep3b" style="display: none;">
@@ -468,12 +468,6 @@
           </div>
           <label class="label-text">Database</label>
           <select id="notionDbSelect" style="margin-bottom: 12px;"></select>
-        </div>
-
-        <div style="text-align: center; margin-top: 14px;">
-          <button onclick="finishOnboarding()" style="background: none; border: none; cursor: pointer; font-size: 12px; color: var(--text-muted); text-decoration: underline;">
-            Skip — use local storage only
-          </button>
         </div>
       </div>
 
