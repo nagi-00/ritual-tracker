@@ -65,7 +65,7 @@
 
     /* ========== Form Elements ========== */
     .label-text { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
-    input[type="text"], select {
+    input[type="text"], input[type="url"], select {
       width: 100%; padding: 12px 14px; border-radius: 12px; border: none;
       background: var(--neu-bg); outline: none; font-size: 13px; margin-bottom: 12px;
       color: var(--text-primary); box-shadow: var(--neu-inset-sm);
@@ -76,7 +76,7 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
     }
-    input[type="text"]:focus, select:focus {
+    input[type="text"]:focus, input[type="url"]:focus, select:focus {
       box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
     }
     input::placeholder { color: #9ba8b8; }
@@ -146,13 +146,11 @@
 
     /* Clock Circle */
     .clock-wrap {
-      position: relative; width: 160px; height: 160px; margin-bottom: 20px;
+      position: relative; width: 160px; height: 160px; margin-bottom: 8px;
     }
     .clock-ring-bg {
-      position: absolute; inset: 0;
-      border-radius: 50%;
-      box-shadow: var(--neu-shadow);
-      background: var(--neu-bg);
+      position: absolute; inset: 0; border-radius: 50%;
+      box-shadow: var(--neu-shadow); background: var(--neu-bg);
     }
     .clock-svg {
       position: absolute; inset: 0; width: 100%; height: 100%;
@@ -186,26 +184,31 @@
       background: var(--text-muted); border-radius: 1px;
     }
 
-    /* Weather badge */
-    .weather-badge {
-      position: absolute; right: -8px; bottom: 12px; z-index: 5;
-      width: 44px; height: 44px; border-radius: 12px;
-      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; cursor: default;
-      transition: all 0.3s;
+    /* Weather badge - below clock, no overlap */
+    .weather-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-bottom: 18px; padding: 8px 16px;
+      border-radius: 12px; background: var(--neu-bg);
+      box-shadow: var(--neu-shadow-xs);
+      cursor: default; position: relative;
+    }
+    .weather-row svg { flex-shrink: 0; }
+    .weather-temp {
+      font-size: 12px; font-weight: 700; color: var(--text-primary);
+    }
+    .weather-city {
+      font-size: 10px; color: var(--text-muted); font-weight: 600;
     }
     .weather-tooltip {
-      position: absolute; bottom: calc(100% + 6px); right: 0;
+      position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(3px);
       background: rgba(58,69,86,0.88); color: #E8ECEF; padding: 7px 12px;
       border-radius: 10px; font-size: 11px; font-weight: 600;
       white-space: nowrap; opacity: 0; pointer-events: none;
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       box-shadow: 3px 3px 8px rgba(163,177,198,0.4);
-      transition: opacity 0.25s, transform 0.25s;
-      transform: translateY(3px); z-index: 10;
+      transition: opacity 0.25s, transform 0.25s; z-index: 10;
     }
-    .weather-badge:hover .weather-tooltip { opacity: 1; transform: translateY(0); }
+    .weather-row:hover .weather-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* Icon buttons row */
     .icon-row { display: flex; gap: 14px; margin-bottom: 22px; }
@@ -213,7 +216,7 @@
       width: 44px; height: 44px; border-radius: 50%; border: none;
       background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; cursor: pointer; transition: all 0.15s;
+      cursor: pointer; transition: all 0.15s;
       color: var(--text-secondary);
     }
     .icon-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
@@ -224,6 +227,7 @@
       background: var(--accent); color: #fff;
       box-shadow: 2px 2px 5px rgba(120,160,110,0.4), -2px -2px 5px rgba(255,255,255,0.4);
     }
+    .icon-btn svg { pointer-events: none; }
 
     /* Toggle rows */
     .toggle-row {
@@ -249,18 +253,19 @@
     .toggle-thumb.off { left: 2px; }
     .toggle-thumb.on { left: 22px; }
 
-    /* Refresh button */
+    /* Refresh button - top right (replaces gear) */
     .refresh-btn {
-      width: 32px; height: 32px; border-radius: 10px; border: none;
+      position: absolute; top: 12px; right: 14px; z-index: 5;
+      width: 28px; height: 28px; border-radius: 8px; border: none;
       background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s; margin-top: 4px;
+      cursor: pointer; transition: all 0.2s;
       color: var(--text-muted);
     }
     .refresh-btn:hover { color: var(--text-primary); box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
     .refresh-btn:active { box-shadow: var(--neu-inset-sm); }
-    .refresh-btn svg { transition: transform 0.4s ease; }
-    .refresh-btn.spinning svg { transform: rotate(360deg); }
+    @keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .refresh-btn.spinning svg { animation: spinOnce 0.5s ease-out forwards; }
 
     /* ========== Modal ========== */
     .modal-overlay {
@@ -310,17 +315,16 @@
     .mood-btn {
       width: 40px; height: 40px; border-radius: 50%; border: none;
       background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
-      font-size: 18px; cursor: pointer; transition: all 0.15s;
+      cursor: pointer; transition: all 0.15s;
       display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary);
     }
     .mood-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
-    .mood-btn.selected { box-shadow: var(--neu-inset); background: var(--accent); }
+    .mood-btn.selected { box-shadow: var(--neu-inset); background: var(--accent); color: #fff; }
 
     /* Gratitude list */
     .gratitude-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-    .gratitude-item {
-      display: flex; gap: 8px; align-items: center;
-    }
+    .gratitude-item { display: flex; gap: 8px; align-items: center; }
     .gratitude-item input {
       flex: 1; padding: 10px 12px; border-radius: 10px; border: none;
       background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
@@ -334,16 +338,6 @@
       color: #fff; font-size: 11px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-
-    /* Settings gear */
-    .settings-btn {
-      position: absolute; top: 12px; right: 14px; z-index: 5;
-      width: 28px; height: 28px; border-radius: 8px; border: none;
-      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: var(--text-muted); transition: all 0.2s;
-    }
-    .settings-btn:hover { color: var(--text-primary); }
 
     /* Toast */
     #toast {
@@ -390,6 +384,7 @@
         <p>Select your region and city. This determines the timezone and weather for your widget.</p>
         <label class="label-text">Region</label>
         <select id="regionSelect" onchange="onRegionChange()">
+          <option value="Korea">Korea</option>
           <option value="Asia">Asia</option>
           <option value="Europe">Europe</option>
           <option value="Americas">Americas</option>
@@ -401,7 +396,9 @@
         <div style="margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm);">
           <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Preview</div>
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 22px;" id="previewWeather">--</span>
+            <span id="previewWeather" style="display: flex; align-items: center; color: var(--text-secondary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+            </span>
             <div>
               <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);" id="previewTime">--:--</div>
               <div style="font-size: 11px; color: var(--text-muted);" id="previewCity">Seoul</div>
@@ -412,16 +409,18 @@
 
       <!-- Step 2: Clock & Display -->
       <div class="step" id="step2">
-        <h1>Clock Style</h1>
-        <p>Choose how your clock looks. You can also pick a custom accent color.</p>
+        <h1>Clock & Shortcuts</h1>
+        <p>Choose your clock style, accent color, and optional shortcut links for the icon buttons.</p>
         <label class="label-text">Clock Type</label>
         <div class="option-row">
           <button class="option-card selected" id="optDigital" onclick="selectClock('digital')">
-            <span class="option-icon">07:30</span>
+            <span class="option-icon" style="font-size: 18px; font-weight: 700; color: var(--text-primary);">07:30</span>
             Digital
           </button>
           <button class="option-card" id="optAnalog" onclick="selectClock('analog')">
-            <span class="option-icon">&#x1F553;</span>
+            <span class="option-icon" style="display: flex; align-items: center; justify-content: center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </span>
             Analog
           </button>
         </div>
@@ -430,6 +429,9 @@
         <label class="label-text">Toggle Labels</label>
         <input type="text" id="label1Input" value="Morning Page" placeholder="First toggle label">
         <input type="text" id="label2Input" value="Daily Diary" placeholder="Second toggle label">
+        <label class="label-text" style="margin-top: 6px;">Shortcut Links (optional)</label>
+        <input type="url" id="link1Input" placeholder="https://... (Button 2)" style="margin-bottom: 8px;">
+        <input type="url" id="link2Input" placeholder="https://... (Button 3)">
       </div>
 
       <!-- Step 3: Notion Integration (OAuth 2.0) -->
@@ -437,10 +439,11 @@
         <h1>Connect Notion</h1>
         <p>Link your Notion workspace via OAuth. Your token is never stored on any server — it stays in your browser only.</p>
 
-        <!-- Not connected state -->
         <div id="notionDisconnected">
           <div style="text-align: center; padding: 20px 0 16px;">
-            <div style="width: 56px; height: 56px; border-radius: 16px; background: var(--neu-bg); box-shadow: var(--neu-shadow-xs); display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 12px;">📝</div>
+            <div style="width: 56px; height: 56px; border-radius: 16px; background: var(--neu-bg); box-shadow: var(--neu-shadow-xs); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
             <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
               Click below to authorize with Notion.<br>
               We'll request access to a database you choose.
@@ -452,7 +455,6 @@
           </button>
         </div>
 
-        <!-- Connected state -->
         <div id="notionConnected" style="display: none;">
           <div style="padding: 16px; border-radius: 16px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm); margin-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -472,7 +474,6 @@
           </div>
         </div>
 
-        <!-- Skip option -->
         <div style="text-align: center; margin-top: 14px;">
           <button onclick="finishOnboarding()" style="background: none; border: none; cursor: pointer; font-size: 12px; color: var(--text-muted); text-decoration: underline;">
             Skip — use local storage only
@@ -485,8 +486,9 @@
 
   <!-- ===== Widget ===== -->
   <div class="widget-frame" id="widgetFrame">
-    <button class="settings-btn" onclick="openOnboarding()" title="Settings">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    <!-- Refresh button (top-right, replaces gear) -->
+    <button class="refresh-btn" id="refreshBtn" onclick="refreshWidget()" title="Refresh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 13.72A9 9 0 1 1 18.57 5.16L21.5 8"/></svg>
     </button>
 
     <div class="date-info" id="dateInfo"></div>
@@ -502,17 +504,35 @@
       <div class="clock-inner" id="clockInner">
         <span class="clock-time" id="clockTime">07:30</span>
       </div>
-      <div class="weather-badge" id="weatherBadge">
-        <span id="weatherIcon">--</span>
-        <div class="weather-tooltip" id="weatherTooltip">Loading...</div>
-      </div>
     </div>
 
-    <!-- Icon buttons -->
+    <!-- Weather row (below clock, no overlap) -->
+    <div class="weather-row" id="weatherRow">
+      <span id="weatherIcon" style="display: flex; align-items: center; color: var(--text-secondary);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+      </span>
+      <span class="weather-temp" id="weatherTemp">--</span>
+      <span class="weather-city" id="weatherCity"></span>
+      <div class="weather-tooltip" id="weatherTooltip">Loading...</div>
+    </div>
+
+    <!-- Icon buttons: 1=mood, 2=link, 3=link -->
     <div class="icon-row">
-      <button class="icon-btn" id="iconBtn0" onclick="clickIcon(0)" title="Mood">&#x1F60A;</button>
-      <button class="icon-btn" id="iconBtn1" onclick="clickIcon(1)" title="Sparkle">&#x2728;</button>
-      <button class="icon-btn" id="iconBtn2" onclick="clickIcon(2)" title="Cloud">&#x2601;</button>
+      <button class="icon-btn" id="iconBtn0" onclick="clickMoodIcon()" title="Today's Mood">
+        <svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="iconBtn1" onclick="clickLinkIcon(0)" title="Shortcut 1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="iconBtn2" onclick="clickLinkIcon(1)" title="Shortcut 2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </button>
     </div>
 
     <!-- Toggle rows -->
@@ -528,11 +548,6 @@
         <div class="toggle-thumb off" id="toggleThumb1"></div>
       </div>
     </div>
-
-    <!-- Refresh -->
-    <button class="refresh-btn" id="refreshBtn" onclick="refreshWidget()" title="Refresh">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-    </button>
   </div>
 </div>
 
@@ -544,11 +559,21 @@
     <div class="modal-sub">Write freely. No rules, no judgment.</div>
     <label class="label-text">How are you feeling?</label>
     <div class="mood-row" id="moodRow">
-      <button class="mood-btn" data-mood="great" onclick="selectMood(this)">&#x1F60A;</button>
-      <button class="mood-btn" data-mood="good" onclick="selectMood(this)">&#x1F642;</button>
-      <button class="mood-btn" data-mood="okay" onclick="selectMood(this)">&#x1F610;</button>
-      <button class="mood-btn" data-mood="bad" onclick="selectMood(this)">&#x1F614;</button>
-      <button class="mood-btn" data-mood="awful" onclick="selectMood(this)">&#x1F622;</button>
+      <button class="mood-btn" data-mood="great" onclick="selectMood(this)" title="Great">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="good" onclick="selectMood(this)" title="Good">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="okay" onclick="selectMood(this)" title="Okay">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="bad" onclick="selectMood(this)" title="Bad">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="awful" onclick="selectMood(this)" title="Awful">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
     </div>
     <textarea id="morningText" placeholder="Start writing your thoughts..."></textarea>
     <div class="modal-actions">
@@ -587,13 +612,66 @@
 <div id="toast"></div>
 
 <script>
+  // ===== SVG Icon Templates (Pulsar Line Style) =====
+  const SVG_WEATHER = {
+    clear: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>',
+    partly: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v2m-6.36.64l1.42 1.42M2 12h2m2.34 5.66l-1.42 1.42M17 12a5 5 0 0 0-9.58-2"/><path d="M17.5 21H9a5 5 0 0 1-.42-9.98A7.002 7.002 0 0 1 17.5 12a4.5 4.5 0 0 1 0 9z"/></svg>',
+    cloudy: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
+    fog: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 10h18M3 14h18M5 18h14M7 6h10"/></svg>',
+    drizzle: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M8 19v2m4-2v2m4-2v2" stroke-dasharray="1 2"/></svg>',
+    rain: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M8 19v3m4-3v3m4-3v3"/></svg>',
+    snow: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M8 20l.5.5m3.5-.5l.5.5m3.5-.5l.5.5M9 18l-.5.5m5-.5l.5.5"/></svg>',
+    storm: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M13 11l-2 4h4l-2 4"/></svg>',
+    fallback: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 4v2a4 4 0 0 1-4 4H8m0 0V4m0 6v6"/><circle cx="12" cy="18" r="1"/></svg>',
+  };
+
+  const SVG_MOOD = {
+    great: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    good: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    okay: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    bad: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    awful: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    none: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  };
+
+  function getWeatherSvg(code) {
+    if (code === 0) return SVG_WEATHER.clear;
+    if (code <= 2) return SVG_WEATHER.partly;
+    if (code === 3) return SVG_WEATHER.cloudy;
+    if (code >= 45 && code <= 48) return SVG_WEATHER.fog;
+    if (code >= 51 && code <= 55) return SVG_WEATHER.drizzle;
+    if (code >= 61 && code <= 65) return SVG_WEATHER.rain;
+    if (code >= 71 && code <= 75) return SVG_WEATHER.snow;
+    if (code >= 80 && code <= 82) return SVG_WEATHER.rain;
+    if (code >= 95) return SVG_WEATHER.storm;
+    return SVG_WEATHER.fallback;
+  }
+
   // ===== Data =====
   const STORAGE_KEY = 'ritual-tracker-config';
   const DATA_KEY = 'ritual-tracker-data';
 
   const CITIES = {
-    Asia: [
+    Korea: [
       { name: 'Seoul', tz: 'Asia/Seoul', lat: 37.57, lon: 126.98 },
+      { name: 'Busan', tz: 'Asia/Seoul', lat: 35.18, lon: 129.08 },
+      { name: 'Incheon', tz: 'Asia/Seoul', lat: 37.46, lon: 126.71 },
+      { name: 'Daegu', tz: 'Asia/Seoul', lat: 35.87, lon: 128.60 },
+      { name: 'Daejeon', tz: 'Asia/Seoul', lat: 36.35, lon: 127.38 },
+      { name: 'Gwangju', tz: 'Asia/Seoul', lat: 35.16, lon: 126.85 },
+      { name: 'Ulsan', tz: 'Asia/Seoul', lat: 35.54, lon: 129.31 },
+      { name: 'Sejong', tz: 'Asia/Seoul', lat: 36.48, lon: 127.00 },
+      { name: 'Suwon', tz: 'Asia/Seoul', lat: 37.26, lon: 127.03 },
+      { name: 'Changwon', tz: 'Asia/Seoul', lat: 35.23, lon: 128.68 },
+      { name: 'Cheongju', tz: 'Asia/Seoul', lat: 36.64, lon: 127.49 },
+      { name: 'Jeonju', tz: 'Asia/Seoul', lat: 35.82, lon: 127.15 },
+      { name: 'Chuncheon', tz: 'Asia/Seoul', lat: 37.87, lon: 127.73 },
+      { name: 'Jeju', tz: 'Asia/Seoul', lat: 33.50, lon: 126.53 },
+      { name: 'Pohang', tz: 'Asia/Seoul', lat: 36.02, lon: 129.37 },
+      { name: 'Yeosu', tz: 'Asia/Seoul', lat: 34.74, lon: 127.74 },
+      { name: 'Gangneung', tz: 'Asia/Seoul', lat: 37.75, lon: 128.90 },
+    ],
+    Asia: [
       { name: 'Tokyo', tz: 'Asia/Tokyo', lat: 35.68, lon: 139.69 },
       { name: 'Shanghai', tz: 'Asia/Shanghai', lat: 31.23, lon: 121.47 },
       { name: 'Singapore', tz: 'Asia/Singapore', lat: 1.35, lon: 103.82 },
@@ -637,22 +715,9 @@
     ],
   };
 
-  const WMO_ICONS = {
-    0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
-    45: '🌫️', 48: '🌫️',
-    51: '🌦️', 53: '🌦️', 55: '🌧️',
-    61: '🌧️', 63: '🌧️', 65: '🌧️',
-    71: '🌨️', 73: '🌨️', 75: '❄️',
-    80: '🌦️', 81: '🌧️', 82: '⛈️',
-    95: '⛈️', 96: '⛈️', 99: '⛈️',
-  };
-
-  function getWmoIcon(code) { return WMO_ICONS[code] || '🌡️'; }
-
   // ===== OAuth Config =====
-  // Set this to your deployed Cloudflare Worker / proxy URL
-  const OAUTH_PROXY_URL = '';  // e.g. 'https://ritual-tracker-proxy.your-worker.workers.dev'
-  const NOTION_CLIENT_ID = ''; // Your Notion OAuth app client ID
+  const OAUTH_PROXY_URL = '';
+  const NOTION_CLIENT_ID = '';
   const NOTION_REDIRECT_URI = window.location.origin + window.location.pathname;
 
   // ===== State =====
@@ -670,7 +735,7 @@
       if (raw) return JSON.parse(raw);
     } catch (_) {}
     return {
-      region: 'Asia',
+      region: 'Korea',
       city: 'Seoul',
       tz: 'Asia/Seoul',
       lat: 37.57,
@@ -679,7 +744,9 @@
       accent: '#a8c5a0',
       label1: 'Morning Page',
       label2: 'Daily Diary',
-      notion: null,  // { accessToken, workspaceName, workspaceIcon, botId, databaseId, databaseName }
+      link1: '',
+      link2: '',
+      notion: null,
       onboardingDone: false,
     };
   }
@@ -716,20 +783,20 @@
   // ===== Onboarding =====
   function populateCities() {
     const sel = document.getElementById('citySelect');
-    const cities = CITIES[config.region] || CITIES.Asia;
+    const cities = CITIES[config.region] || CITIES.Korea;
     sel.innerHTML = cities.map(c => `<option value="${c.name}" ${c.name === config.city ? 'selected' : ''}>${c.name}</option>`).join('');
     onCityChange();
   }
 
   function onRegionChange() {
     config.region = document.getElementById('regionSelect').value;
-    config.city = (CITIES[config.region] || CITIES.Asia)[0].name;
+    config.city = (CITIES[config.region] || CITIES.Korea)[0].name;
     populateCities();
   }
 
   function onCityChange() {
     const cityName = document.getElementById('citySelect').value;
-    const cities = CITIES[config.region] || CITIES.Asia;
+    const cities = CITIES[config.region] || CITIES.Korea;
     const c = cities.find(x => x.name === cityName) || cities[0];
     config.city = c.name; config.tz = c.tz; config.lat = c.lat; config.lon = c.lon;
     updatePreviewTime();
@@ -753,13 +820,15 @@
       const res = await fetch(url);
       const data = await res.json();
       weatherCache = data.current;
-      const icon = getWmoIcon(data.current.weather_code);
+      const svgHtml = getWeatherSvg(data.current.weather_code);
       const temp = Math.round(data.current.temperature_2m);
-      document.getElementById('previewWeather').textContent = icon;
-      document.getElementById('weatherIcon').textContent = icon;
-      document.getElementById('weatherTooltip').textContent = `${config.city}  ${temp}°C`;
+      document.getElementById('previewWeather').innerHTML = svgHtml;
+      document.getElementById('weatherIcon').innerHTML = svgHtml;
+      document.getElementById('weatherTemp').textContent = `${temp}°C`;
+      document.getElementById('weatherCity').textContent = config.city;
+      document.getElementById('weatherTooltip').textContent = `${config.city} ${temp}°C`;
     } catch (_) {
-      document.getElementById('previewWeather').textContent = '🌡️';
+      document.getElementById('previewWeather').innerHTML = SVG_WEATHER.fallback;
     }
   }
 
@@ -787,6 +856,8 @@
   function finishOnboarding() {
     config.label1 = document.getElementById('label1Input').value || 'Morning Page';
     config.label2 = document.getElementById('label2Input').value || 'Daily Diary';
+    config.link1 = document.getElementById('link1Input').value || '';
+    config.link2 = document.getElementById('link2Input').value || '';
     config.onboardingDone = true;
     saveConfig();
     document.getElementById('onboardingWindow').classList.add('hidden');
@@ -801,6 +872,8 @@
     document.getElementById('accentColorPicker').value = config.accent;
     document.getElementById('label1Input').value = config.label1;
     document.getElementById('label2Input').value = config.label2;
+    document.getElementById('link1Input').value = config.link1 || '';
+    document.getElementById('link2Input').value = config.link2 || '';
     selectClock(config.clockType);
     renderNotionStep();
   }
@@ -822,138 +895,67 @@
       showToast('OAuth not configured. Set NOTION_CLIENT_ID & OAUTH_PROXY_URL.');
       return;
     }
-    // Generate random state for CSRF protection
     const state = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
     sessionStorage.setItem('notion_oauth_state', state);
-
     const authUrl = `https://api.notion.com/v1/oauth/authorize?client_id=${encodeURIComponent(NOTION_CLIENT_ID)}&response_type=code&owner=user&redirect_uri=${encodeURIComponent(NOTION_REDIRECT_URI)}&state=${encodeURIComponent(state)}`;
-
-    // Open popup
     const w = 500, h = 700;
     const left = (screen.width - w) / 2, top = (screen.height - h) / 2;
     const popup = window.open(authUrl, 'notion_oauth', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`);
-
-    // Poll for popup close (fallback if postMessage doesn't fire)
     const pollTimer = setInterval(() => {
-      if (popup && popup.closed) {
-        clearInterval(pollTimer);
-        // Check if we got a token during the popup flow
-        config = loadConfig();
-        renderNotionStep();
-      }
+      if (popup && popup.closed) { clearInterval(pollTimer); config = loadConfig(); renderNotionStep(); }
     }, 500);
   }
 
-  // Handle OAuth callback (when this page is loaded with ?code= param)
   async function handleOAuthCallback() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
     const error = params.get('error');
-
     if (!code) return false;
-
-    // Clean URL immediately
     const cleanUrl = window.location.origin + window.location.pathname;
     window.history.replaceState({}, document.title, cleanUrl);
-
-    if (error) {
-      showToast('Notion authorization was denied.');
-      return true;
-    }
-
-    // Verify state (CSRF)
+    if (error) { showToast('Notion authorization was denied.'); return true; }
     const savedState = sessionStorage.getItem('notion_oauth_state');
-    if (savedState && state !== savedState) {
-      showToast('OAuth state mismatch. Please try again.');
-      return true;
-    }
+    if (savedState && state !== savedState) { showToast('OAuth state mismatch.'); return true; }
     sessionStorage.removeItem('notion_oauth_state');
-
-    // Exchange code for token via proxy
     try {
       document.getElementById('notionConnectBtn').textContent = 'Connecting...';
       document.getElementById('notionConnectBtn').disabled = true;
-
       const res = await fetch(`${OAUTH_PROXY_URL}/auth/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: code,
-          redirect_uri: NOTION_REDIRECT_URI,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, redirect_uri: NOTION_REDIRECT_URI }),
       });
-
       if (!res.ok) throw new Error('Token exchange failed');
-
       const data = await res.json();
-      // Notion returns: { access_token, workspace_name, workspace_icon, bot_id, ... }
-      config.notion = {
-        accessToken: data.access_token,
-        workspaceName: data.workspace_name || '',
-        workspaceIcon: data.workspace_icon || '',
-        botId: data.bot_id || '',
-        databaseId: '',
-        databaseName: '',
-      };
-      saveConfig();
-      renderNotionStep();
-      showToast('Connected to Notion!');
-
-      // If we're in a popup, notify opener and close
-      if (window.opener) {
-        window.opener.postMessage({ type: 'notion-oauth-done' }, '*');
-        window.close();
-      }
-    } catch (err) {
-      showToast('Failed to connect. Please try again.');
-      console.error('OAuth token exchange error:', err);
-    }
+      config.notion = { accessToken: data.access_token, workspaceName: data.workspace_name || '', workspaceIcon: data.workspace_icon || '', botId: data.bot_id || '', databaseId: '', databaseName: '' };
+      saveConfig(); renderNotionStep(); showToast('Connected to Notion!');
+      if (window.opener) { window.opener.postMessage({ type: 'notion-oauth-done' }, '*'); window.close(); }
+    } catch (err) { showToast('Failed to connect.'); console.error(err); }
     return true;
   }
 
-  // Listen for popup messages
   window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'notion-oauth-done') {
-      config = loadConfig();
-      renderNotionStep();
-    }
+    if (e.data && e.data.type === 'notion-oauth-done') { config = loadConfig(); renderNotionStep(); }
   });
 
-  function disconnectNotion() {
-    config.notion = null;
-    saveConfig();
-    renderNotionStep();
-    showToast('Notion disconnected.');
-  }
+  function disconnectNotion() { config.notion = null; saveConfig(); renderNotionStep(); showToast('Notion disconnected.'); }
 
-  // ===== Notion API (via proxy) =====
   async function notionFetch(endpoint, options = {}) {
     if (!config.notion || !config.notion.accessToken || !OAUTH_PROXY_URL) return null;
     try {
       const res = await fetch(`${OAUTH_PROXY_URL}/api/notion${endpoint}`, {
         method: options.method || 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Notion-Token': config.notion.accessToken,
-        },
+        headers: { 'Content-Type': 'application/json', 'X-Notion-Token': config.notion.accessToken },
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
       if (!res.ok) throw new Error(`Notion API ${res.status}`);
       return await res.json();
-    } catch (err) {
-      console.error('Notion API error:', err);
-      return null;
-    }
+    } catch (err) { console.error('Notion API error:', err); return null; }
   }
 
   async function fetchNotionDatabases() {
-    const data = await notionFetch('/search', {
-      method: 'POST',
-      body: { filter: { value: 'database', property: 'object' }, page_size: 50 },
-    });
+    const data = await notionFetch('/search', { method: 'POST', body: { filter: { value: 'database', property: 'object' }, page_size: 50 } });
     if (!data || !data.results) return;
-
     const sel = document.getElementById('notionDbSelect');
     sel.innerHTML = '<option value="">Select a database...</option>' +
       data.results.map(db => {
@@ -966,76 +968,38 @@
     const sel = document.getElementById('notionDbSelect');
     const opt = sel.options[sel.selectedIndex];
     if (config.notion) {
-      config.notion.databaseId = sel.value;
-      config.notion.databaseName = opt ? opt.textContent : '';
-      document.getElementById('notionDbName').textContent = config.notion.databaseName || 'Not selected';
-      saveConfig();
+      config.notion.databaseId = sel.value; config.notion.databaseName = opt ? opt.textContent : '';
+      document.getElementById('notionDbName').textContent = config.notion.databaseName || 'Not selected'; saveConfig();
     }
   }
 
   async function saveToNotion(type, content) {
     if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
-
     const dateStr = todayKey();
     const properties = {
       'Name': { title: [{ text: { content: `${type} — ${dateStr}` } }] },
       'Type': { select: { name: type } },
       'Date': { date: { start: dateStr } },
     };
-
-    if (type === 'Morning Page') {
-      if (content.mood) {
-        properties['Mood'] = { select: { name: content.mood } };
-      }
-    }
-
-    // Build page children (block content)
+    if (type === 'Morning Page' && content.mood) properties['Mood'] = { select: { name: content.mood } };
     const children = [];
-
     if (type === 'Morning Page' && content.text) {
-      children.push({
-        object: 'block', type: 'paragraph',
-        paragraph: { rich_text: [{ type: 'text', text: { content: content.text } }] },
-      });
+      children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: content.text } }] } });
     }
-
     if (type === 'Daily Diary') {
       if (content.gratitude && content.gratitude.some(g => g.trim())) {
-        children.push({
-          object: 'block', type: 'heading_3',
-          heading_3: { rich_text: [{ type: 'text', text: { content: 'Grateful for' } }] },
-        });
-        content.gratitude.filter(g => g.trim()).forEach((g, i) => {
-          children.push({
-            object: 'block', type: 'numbered_list_item',
-            numbered_list_item: { rich_text: [{ type: 'text', text: { content: g } }] },
-          });
+        children.push({ object: 'block', type: 'heading_3', heading_3: { rich_text: [{ type: 'text', text: { content: 'Grateful for' } }] } });
+        content.gratitude.filter(g => g.trim()).forEach(g => {
+          children.push({ object: 'block', type: 'numbered_list_item', numbered_list_item: { rich_text: [{ type: 'text', text: { content: g } }] } });
         });
       }
       if (content.text) {
-        children.push({
-          object: 'block', type: 'heading_3',
-          heading_3: { rich_text: [{ type: 'text', text: { content: 'Diary' } }] },
-        });
-        children.push({
-          object: 'block', type: 'paragraph',
-          paragraph: { rich_text: [{ type: 'text', text: { content: content.text } }] },
-        });
+        children.push({ object: 'block', type: 'heading_3', heading_3: { rich_text: [{ type: 'text', text: { content: 'Diary' } }] } });
+        children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: content.text } }] } });
       }
     }
-
-    const result = await notionFetch('/pages', {
-      method: 'POST',
-      body: {
-        parent: { database_id: config.notion.databaseId },
-        properties: properties,
-        children: children,
-      },
-    });
-
-    if (result) {
-      showToast('Saved to Notion!');
-    }
+    const result = await notionFetch('/pages', { method: 'POST', body: { parent: { database_id: config.notion.databaseId }, properties, children } });
+    if (result) showToast('Saved to Notion!');
   }
 
   // ===== Widget =====
@@ -1045,6 +1009,7 @@
     document.getElementById('toggleLabel1').textContent = config.label2;
     todayData = loadTodayData();
     updateToggles();
+    updateMoodIcon();
     renderClock();
     startClock();
     fetchWeather();
@@ -1081,7 +1046,6 @@
     if (config.clockType === 'analog') {
       inner.innerHTML = '<div class="analog-face" id="analogFace"></div>';
       const face = document.getElementById('analogFace');
-      // Ticks
       for (let i = 0; i < 12; i++) {
         const tick = document.createElement('div');
         tick.className = 'tick';
@@ -1107,9 +1071,7 @@
   function updateAnalogHands() {
     const now = getNow();
     const h = now.getHours() % 12, m = now.getMinutes(), s = now.getSeconds();
-    const hDeg = (h * 30) + (m * 0.5);
-    const mDeg = m * 6;
-    const sDeg = s * 6;
+    const hDeg = (h * 30) + (m * 0.5), mDeg = m * 6, sDeg = s * 6;
     const hourEl = document.getElementById('hourHand');
     const minEl = document.getElementById('minHand');
     const secEl = document.getElementById('secHand');
@@ -1148,24 +1110,44 @@
       const res = await fetch(url);
       const data = await res.json();
       weatherCache = data.current;
-      const icon = getWmoIcon(data.current.weather_code);
+      const svgHtml = getWeatherSvg(data.current.weather_code);
       const temp = Math.round(data.current.temperature_2m);
-      document.getElementById('weatherIcon').textContent = icon;
-      document.getElementById('weatherTooltip').textContent = `${config.city}  ${temp}°C`;
+      document.getElementById('weatherIcon').innerHTML = svgHtml;
+      document.getElementById('weatherTemp').textContent = `${temp}°C`;
+      document.getElementById('weatherCity').textContent = config.city;
+      document.getElementById('weatherTooltip').textContent = `${config.city} ${temp}°C`;
     } catch (_) {
-      document.getElementById('weatherIcon').textContent = '🌡️';
+      document.getElementById('weatherIcon').innerHTML = SVG_WEATHER.fallback;
+      document.getElementById('weatherTemp').textContent = '--';
       document.getElementById('weatherTooltip').textContent = 'Unable to load';
     }
   }
 
-  // ===== Icon Buttons (Clicker) =====
-  const iconStates = [0, 0, 0];
-  function clickIcon(idx) {
-    const btn = document.getElementById(`iconBtn${idx}`);
-    iconStates[idx] = iconStates[idx] ? 0 : 1;
-    btn.classList.toggle('active', !!iconStates[idx]);
+  // ===== Icon Buttons =====
+  // Button 0: Mood — shows current mood face, opens morning page on click
+  function updateMoodIcon() {
+    const mood = todayData.mood || 'none';
+    const el = document.getElementById('moodIconSvg');
+    if (el) el.outerHTML = SVG_MOOD[mood] || SVG_MOOD.none;
+    const btn = document.getElementById('iconBtn0');
+    if (btn) btn.classList.toggle('active', !!todayData.mood);
+  }
+
+  function clickMoodIcon() {
+    openModal(0);
+  }
+
+  // Buttons 1 & 2: Custom links
+  function clickLinkIcon(idx) {
+    const link = idx === 0 ? config.link1 : config.link2;
+    const btn = document.getElementById(`iconBtn${idx + 1}`);
     btn.classList.add('pressed');
     setTimeout(() => btn.classList.remove('pressed'), 150);
+    if (link) {
+      window.open(link, '_blank', 'noopener');
+    } else {
+      showToast('No link set. Configure in settings.');
+    }
   }
 
   // ===== Modals =====
@@ -1174,7 +1156,6 @@
     const overlay = document.getElementById('modalOverlay');
     document.getElementById('modalMorning').style.display = idx === 0 ? 'block' : 'none';
     document.getElementById('modalDiary').style.display = idx === 1 ? 'block' : 'none';
-
     if (idx === 0) {
       document.getElementById('morningText').value = todayData.morning || '';
       selectedMood = todayData.mood || '';
@@ -1208,9 +1189,9 @@
     todayData.morningDone = !!(todayData.morning.trim() || todayData.mood);
     saveTodayData();
     updateToggles();
+    updateMoodIcon();
     closeModal();
     showToast('Morning page saved!');
-    // Sync to Notion (non-blocking)
     saveToNotion('Morning Page', { text: todayData.morning, mood: todayData.mood });
   }
 
@@ -1226,17 +1207,18 @@
     updateToggles();
     closeModal();
     showToast('Daily diary saved!');
-    // Sync to Notion (non-blocking)
     saveToNotion('Daily Diary', { text: todayData.diary, gratitude: todayData.gratitude });
   }
 
   // ===== Refresh =====
   function refreshWidget() {
     const btn = document.getElementById('refreshBtn');
+    btn.classList.remove('spinning');
+    void btn.offsetWidth; // force reflow to restart animation
     btn.classList.add('spinning');
-    setTimeout(() => btn.classList.remove('spinning'), 500);
     todayData = loadTodayData();
     updateToggles();
+    updateMoodIcon();
     fetchWeather();
     updateDateInfo();
     renderClock();
@@ -1252,14 +1234,11 @@
 
   // ===== Init =====
   window.onload = async () => {
-    // Handle OAuth callback first (page may have been redirected back with ?code=)
     const wasCallback = await handleOAuthCallback();
-
     document.getElementById('regionSelect').value = config.region;
     populateCities();
     document.documentElement.style.setProperty('--accent', config.accent);
     renderNotionStep();
-
     if (config.onboardingDone && !wasCallback) {
       document.getElementById('onboardingWindow').classList.add('hidden');
     }
