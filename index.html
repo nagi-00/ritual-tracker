@@ -24,6 +24,7 @@
 
     * { box-sizing: border-box; font-family: var(--font-family); letter-spacing: -0.01em; margin: 0; padding: 0; }
     html, body { margin: 0; padding: 0; }
+    html { background: var(--neu-bg); }
     body {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
       background: var(--neu-bg); padding: 20px; transition: background 0.3s;
@@ -264,13 +265,42 @@
     }
     .refresh-btn:hover { color: var(--text-primary); box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
     .refresh-btn:active { box-shadow: var(--neu-inset-sm); }
+    .settings-btn {
+      position: absolute; top: 12px; right: 48px; z-index: 5;
+      width: 28px; height: 28px; border-radius: 8px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+      color: var(--text-muted);
+    }
+    .settings-btn:hover { color: var(--text-primary); box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .settings-btn:active { box-shadow: var(--neu-inset-sm); }
+    /* Settings panel */
+    .settings-panel {
+      position: absolute; top: 46px; right: 14px; z-index: 20;
+      width: 240px; padding: 16px; border-radius: 16px;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow);
+      display: none;
+    }
+    .settings-panel.open { display: block; }
+    .settings-panel .label-text { font-size: 10px; margin-bottom: 4px; }
+    .settings-panel input[type="url"] {
+      font-size: 12px; padding: 8px 10px; border-radius: 8px; margin-bottom: 8px;
+    }
+    .settings-panel .settings-save-btn {
+      width: 100%; padding: 8px; border-radius: 10px; border: none;
+      cursor: pointer; font-size: 12px; font-weight: 700; color: #fff;
+      background: var(--accent); box-shadow: var(--neu-shadow-xs);
+      transition: all 0.2s;
+    }
+    .settings-panel .settings-save-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
     @keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     .refresh-btn.spinning svg { animation: spinOnce 0.5s ease-out forwards; }
 
     /* ========== Modal ========== */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(58,69,86,0.25);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      position: fixed; inset: 0; background: rgba(58,69,86,0.35);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       display: flex; align-items: center; justify-content: center;
       z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
@@ -530,7 +560,19 @@
 
   <!-- ===== Widget ===== -->
   <div class="widget-frame" id="widgetFrame">
-    <!-- Refresh button (top-right, replaces gear) -->
+    <!-- Settings button -->
+    <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <!-- Settings panel -->
+    <div class="settings-panel" id="settingsPanel">
+      <label class="label-text">Shortcut Link 1 (Star)</label>
+      <input type="url" id="settingsLink1" placeholder="https://...">
+      <label class="label-text">Shortcut Link 2 (Music)</label>
+      <input type="url" id="settingsLink2" placeholder="https://...">
+      <button class="settings-save-btn" onclick="saveSettings()">Save</button>
+    </div>
+    <!-- Refresh button (top-right) -->
     <button class="refresh-btn" id="refreshBtn" onclick="refreshWidget()" title="Refresh">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 13.72A9 9 0 1 1 18.57 5.16L21.5 8"/></svg>
     </button>
@@ -1003,7 +1045,6 @@
 
   function applyNeuTheme(bgHex, textHex) {
     const vars = computeNeuVars(bgHex, textHex);
-    // Apply to widget, modals, toast, and body background
     const targets = [
       document.getElementById('widgetFrame'),
       document.getElementById('modalOverlay'),
@@ -1013,8 +1054,12 @@
       if (!el) return;
       Object.entries(vars).forEach(([k, v]) => el.style.setProperty(k, v));
     });
-    // Always keep body background in sync with widget background
-    document.body.style.background = bgHex;
+    // Only change body/html background when onboarding is done or in embed mode
+    const onboardingWin = document.getElementById('onboardingWindow');
+    if (!onboardingWin || onboardingWin.classList.contains('hidden')) {
+      document.documentElement.style.background = bgHex;
+      document.body.style.background = bgHex;
+    }
     // Update ring background stroke to match theme
     const ringBg = document.getElementById('ringBg');
     if (ringBg) {
@@ -1071,10 +1116,11 @@
 
     // Collect selected DB
     var sel = document.getElementById('notionDbSelect');
-    if (sel && sel.value) {
+    if (sel && sel.value && config.notion) {
       var opt = sel.options[sel.selectedIndex];
       config.notion.databaseId = sel.value;
       config.notion.databaseName = opt ? opt.textContent : '';
+      saveConfig();
     }
 
     var embedConfig = {
@@ -1169,19 +1215,19 @@
       var data = await res.json();
       if (!data.results || !data.results.length) throw new Error('No databases found');
 
-      config.notion = { accessToken: token, databaseId: '', databaseName: '' };
-      saveConfig();
-
       var sel = document.getElementById('notionDbSelect');
       sel.innerHTML = data.results.map(function(db) {
         var title = (db.title && db.title[0]) ? db.title[0].plain_text : 'Untitled';
         return '<option value="' + db.id + '">' + title + '</option>';
       }).join('');
 
+      var firstDb = data.results[0];
+      var firstName = (firstDb.title && firstDb.title[0]) ? firstDb.title[0].plain_text : 'Untitled';
+      config.notion = { accessToken: token, databaseId: firstDb.id, databaseName: firstName };
+      saveConfig();
+
       // Auto-setup properties for the first database
-      if (data.results.length) {
-        await setupNotionDatabase(data.results[0].id);
-      }
+      await setupNotionDatabase(firstDb.id);
 
       document.getElementById('notionStep3a').style.display = 'none';
       document.getElementById('notionStep3b').style.display = 'block';
@@ -1197,7 +1243,11 @@
 
   async function onDbSelectChange() {
     var sel = document.getElementById('notionDbSelect');
-    if (sel && sel.value) {
+    if (sel && sel.value && config.notion) {
+      config.notion.databaseId = sel.value;
+      var opt = sel.options[sel.selectedIndex];
+      config.notion.databaseName = opt ? opt.textContent : '';
+      saveConfig();
       await setupNotionDatabase(sel.value);
     }
   }
@@ -1589,7 +1639,13 @@
       document.getElementById('grat2').value,
     ];
     targetData.diary = document.getElementById('diaryText').value;
-    targetData.diaryDone = !!(targetData.diary.trim() || targetData.gratitude.some(g => g.trim()) || targetData.mood);
+    targetData.diaryDone = !!(
+      targetData.mood &&
+      targetData.gratitude[0] && targetData.gratitude[0].trim() &&
+      targetData.gratitude[1] && targetData.gratitude[1].trim() &&
+      targetData.gratitude[2] && targetData.gratitude[2].trim() &&
+      targetData.diary && targetData.diary.trim()
+    );
 
     saveDataForDate(targetDateKey, targetData);
 
@@ -1606,11 +1662,15 @@
   }
 
   // ===== Refresh =====
-  function refreshWidget() {
+  async function refreshWidget() {
     const btn = document.getElementById('refreshBtn');
     btn.classList.remove('spinning');
-    void btn.offsetWidth; // force reflow to restart animation
+    void btn.offsetWidth;
     btn.classList.add('spinning');
+
+    // Bidirectional sync: pull from Notion first, then update local
+    await pullFromNotion();
+
     todayData = loadTodayData();
     updateToggles();
     updateMoodIcon();
@@ -1618,6 +1678,96 @@
     updateDateInfo();
     renderClock();
   }
+
+  async function pullFromNotion() {
+    if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
+    try {
+      var pageId = await findPageByDate(todayKey());
+      if (!pageId) return;
+
+      // Fetch page properties
+      var page = await notionFetch('/pages/' + pageId);
+      if (!page || !page.properties) return;
+
+      var props = page.properties;
+      // Extract mood
+      if (props['Mood'] && props['Mood'].select && props['Mood'].select.name) {
+        todayData.mood = props['Mood'].select.name;
+      }
+      // Extract gratitude
+      for (var i = 1; i <= 3; i++) {
+        var key = 'Gratitude ' + i;
+        if (props[key] && props[key].rich_text && props[key].rich_text.length) {
+          todayData.gratitude[i - 1] = props[key].rich_text[0].plain_text || '';
+        }
+      }
+
+      // Fetch child blocks for morning page & diary text
+      var blocks = await notionFetch('/blocks/' + pageId + '/children');
+      if (blocks && blocks.results) {
+        var section = '';
+        var morningText = [];
+        var diaryText = [];
+        for (var b = 0; b < blocks.results.length; b++) {
+          var block = blocks.results[b];
+          if (block.type === 'heading_2' && block.heading_2 && block.heading_2.rich_text && block.heading_2.rich_text.length) {
+            var heading = block.heading_2.rich_text[0].plain_text || '';
+            if (heading.indexOf('Morning') !== -1) section = 'morning';
+            else if (heading.indexOf('Diary') !== -1 || heading.indexOf('Daily') !== -1) section = 'diary';
+          } else if (block.type === 'paragraph' && block.paragraph && block.paragraph.rich_text) {
+            var text = block.paragraph.rich_text.map(function(rt) { return rt.plain_text; }).join('');
+            if (section === 'morning') morningText.push(text);
+            else if (section === 'diary') diaryText.push(text);
+          }
+        }
+        if (morningText.length) todayData.morning = morningText.join('\n');
+        if (diaryText.length) todayData.diary = diaryText.join('\n');
+      }
+
+      todayData.notionPageId = pageId;
+      todayData.morningDone = !!(todayData.morning && todayData.morning.trim());
+      todayData.diaryDone = !!(
+        todayData.mood &&
+        todayData.gratitude[0] && todayData.gratitude[0].trim() &&
+        todayData.gratitude[1] && todayData.gratitude[1].trim() &&
+        todayData.gratitude[2] && todayData.gratitude[2].trim() &&
+        todayData.diary && todayData.diary.trim()
+      );
+      saveTodayData();
+    } catch (err) {
+      console.error('Pull from Notion error:', err);
+    }
+  }
+
+  // ===== Settings Panel =====
+  function toggleSettings() {
+    var panel = document.getElementById('settingsPanel');
+    var isOpen = panel.classList.contains('open');
+    if (isOpen) {
+      panel.classList.remove('open');
+    } else {
+      document.getElementById('settingsLink1').value = config.link1 || '';
+      document.getElementById('settingsLink2').value = config.link2 || '';
+      panel.classList.add('open');
+    }
+  }
+
+  function saveSettings() {
+    config.link1 = document.getElementById('settingsLink1').value || '';
+    config.link2 = document.getElementById('settingsLink2').value || '';
+    saveConfig();
+    document.getElementById('settingsPanel').classList.remove('open');
+    showToast('Settings saved!');
+  }
+
+  // Close settings when clicking outside
+  document.addEventListener('click', function(e) {
+    var panel = document.getElementById('settingsPanel');
+    var btn = document.getElementById('settingsBtn');
+    if (panel && panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      panel.classList.remove('open');
+    }
+  });
 
   // ===== Toast =====
   function showToast(msg) {
@@ -1660,6 +1810,12 @@
 
   // ===== Init =====
   window.onload = async () => {
+    // If URL has ?w= param, always treat as embed — hide onboarding immediately
+    var hasEmbedParam = new URLSearchParams(window.location.search).has('w');
+    if (hasEmbedParam) {
+      document.getElementById('onboardingWindow').classList.add('hidden');
+    }
+
     var isEmbed = await loadEmbedConfig();
     document.getElementById('regionSelect').value = config.region;
     populateCities();
@@ -1667,10 +1823,14 @@
     document.getElementById('textColorPicker').value = config.textColor || '#3a4556';
     if (isEmbed) {
       document.getElementById('onboardingWindow').classList.add('hidden');
+      saveConfig();
       // Auto-setup Notion database properties on embed load
       if (config.notion && config.notion.databaseId) {
         setupNotionDatabase(config.notion.databaseId);
       }
+    } else if (hasEmbedParam) {
+      // Embed param present but config load failed — still hide onboarding, use cached config
+      document.getElementById('onboardingWindow').classList.add('hidden');
     }
     initWidget();
   };
