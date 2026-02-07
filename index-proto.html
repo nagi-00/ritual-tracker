@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>노션 위젯 프로토타입</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #E8ECEF;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Pro Display", "Inter", sans-serif;
+      letter-spacing: -0.01em;
+    }
+    #app { display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; max-width: 420px; }
+
+    /* ========== 온보딩 (index 17 동일) ========== */
+    .onboarding-root {
+      --neu-bg: #E8ECEF;
+      --neu-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+      --neu-shadow-sm: 5px 5px 10px rgba(163, 177, 198, 0.5), -5px -5px 10px rgba(255, 255, 255, 0.5);
+      --neu-shadow-xs: 3px 3px 6px rgba(163, 177, 198, 0.45), -3px -3px 6px rgba(255, 255, 255, 0.45);
+      --neu-inset-sm: inset 2px 2px 5px rgba(163, 177, 198, 0.4), inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+      --text-primary: #3a4556;
+      --text-secondary: #6b7a8d;
+      --text-muted: #8895a7;
+    }
+    .onboarding-window {
+      width: 100%;
+      max-width: 420px;
+      background: var(--neu-bg);
+      border-radius: 24px;
+      box-shadow: var(--neu-shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .onboarding-title-bar {
+      height: 54px;
+      background: var(--neu-bg);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      border-bottom: 1px solid rgba(163, 177, 198, 0.25);
+    }
+    .onboarding-dots { display: flex; gap: 7px; flex: 1; }
+    .onboarding-dot {
+      width: 11px; height: 11px; border-radius: 50%;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1), 1px 1px 2px rgba(255,255,255,0.5);
+    }
+    .onboarding-dot.red { background: #d4a0a0; }
+    .onboarding-dot.yellow { background: #d4d4a0; }
+    .onboarding-dot.green { background: #a0c8a0; }
+    .onboarding-bar-title {
+      font-size: 13px; font-weight: 700; color: var(--text-primary);
+      flex: 2; text-align: center; letter-spacing: 0.05em;
+    }
+    .onboarding-content {
+      padding: 30px 25px;
+      min-height: 280px;
+    }
+    .onboarding-content h1 {
+      font-size: 20px; font-weight: 800; margin: 0 0 8px;
+      color: var(--text-primary);
+    }
+    .onboarding-content p {
+      font-size: 13px; color: var(--text-secondary);
+      margin-bottom: 20px; line-height: 1.4;
+    }
+    .onboarding-label-text {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      margin-bottom: 6px; display: block;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .onboarding-input-text,
+    .onboarding-input-color-wrap input[type="text"] {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: none;
+      background: var(--neu-bg); outline: none; font-size: 13px;
+      margin-bottom: 10px; color: var(--text-primary);
+      box-shadow: var(--neu-inset-sm);
+      -webkit-appearance: none; appearance: none;
+    }
+    .onboarding-input-text:focus,
+    .onboarding-input-color-wrap input[type="text"]:focus {
+      box-shadow: inset 3px 3px 6px rgba(163, 177, 198, 0.55), inset -3px -3px 6px rgba(255, 255, 255, 0.65);
+    }
+    .onboarding-input-color-wrap { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; }
+    .onboarding-input-color-wrap input[type="text"] { flex: 1; margin-bottom: 0; }
+    .onboarding-input-color-wrap input[type="color"] {
+      width: 50px; height: 40px; border: none; padding: 4px; cursor: pointer;
+      border-radius: 12px; background: var(--neu-bg);
+      box-shadow: var(--neu-shadow-sm);
+      -webkit-appearance: none; appearance: none;
+    }
+    .onboarding-input-color-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
+    .onboarding-input-color-wrap input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; }
+    .onboarding-apply-btn {
+      width: 100%; padding: 12px 16px; border-radius: 12px; border: none;
+      cursor: pointer; font-size: 13px; font-weight: 700; color: #fff;
+      margin-top: 8px; box-shadow: var(--neu-shadow-xs);
+    }
+    .onboarding-apply-btn:hover {
+      box-shadow: 2px 2px 4px rgba(163, 177, 198, 0.5), -2px -2px 4px rgba(255, 255, 255, 0.5);
+    }
+    .onboarding-apply-btn:active { box-shadow: var(--neu-inset-sm); }
+    .onboarding-hint { font-size: 11px; color: var(--text-muted); margin-bottom: 15px; }
+    .back-link { font-size: 12px; color: #6b7a8d; text-decoration: underline; cursor: pointer; }
+
+    /* ========== 위젯 ========== */
+    .widget-frame {
+      min-width: 320px; max-width: 380px;
+      border-radius: 29px; overflow: hidden;
+      display: flex; flex-direction: column;
+      padding: 20px;
+      transition: background 0.3s, box-shadow 0.3s, color 0.3s;
+    }
+    .widget-row-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .widget-clock-wrap { position: relative; flex-shrink: 0; }
+    .widget-weather-btn {
+      width: 48px; height: 48px; border-radius: 12px; border: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0; cursor: pointer;
+    }
+    .widget-icons { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+    .widget-icon-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; transition: all 0.2s;
+    }
+    .widget-toggles { display: flex; flex-direction: column; gap: 12px; margin-top: auto; }
+    .widget-toggle-row { display: flex; align-items: center; justify-content: space-between; }
+    .widget-toggle-label { font-size: 14px; font-weight: 500; opacity: 0.9; }
+    .widget-toggle-track {
+      width: 44px; height: 24px; border-radius: 999px; position: relative;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .widget-toggle-thumb {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 20px; height: 20px; border-radius: 50%; border: none;
+      transition: left 0.2s; background: #fff;
+    }
+    .widget-toggle-thumb.off { left: 4px; }
+    .widget-toggle-thumb.on { left: 22px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    const STORAGE_KEY = 'notion-widget-theme';
+
+    function getNeuShadows(hex) {
+      hex = (hex || '#E8ECEF').replace(/^#/, '');
+      if (hex.length !== 6) return getNeuShadows('#E8ECEF');
+      const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+      const dr = Math.round(r * 0.7), dg = Math.round(g * 0.7), db = Math.round(b * 0.7);
+      const lr = Math.min(255, Math.round(r + (255 - r) * 0.5));
+      const lg = Math.min(255, Math.round(g + (255 - g) * 0.5));
+      const lb = Math.min(255, Math.round(b + (255 - b) * 0.5));
+      const d = dr + ', ' + dg + ', ' + db, l = lr + ', ' + lg + ', ' + lb;
+      return {
+        shadow: '9px 9px 16px rgba(' + d + ', 0.6), -9px -9px 16px rgba(' + l + ', 0.5)',
+        shadowSm: '5px 5px 10px rgba(' + d + ', 0.5), -5px -5px 10px rgba(' + l + ', 0.5)',
+        shadowXs: '3px 3px 6px rgba(' + d + ', 0.45), -3px -3px 6px rgba(' + l + ', 0.45)',
+        insetSm: 'inset 2px 2px 5px rgba(' + d + ', 0.4), inset -2px -2px 5px rgba(' + l + ', 0.5)',
+        imgShadow: '4px 4px 8px rgba(' + d + ', 0.5), -4px -4px 8px rgba(' + l + ', 0.5)',
+      };
+    }
+
+    function getContrastTextColor(hex) {
+      hex = (hex || '#E8ECEF').replace(/^#/, '');
+      if (hex.length !== 6) return '#1d1d1f';
+      const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      return yiq >= 128 ? '#1d1d1f' : '#ffffff';
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return {
+        backgroundColor: '#E8ECEF',
+        accentColor: '#22c55e',
+        textColor: '#3a4556',
+        onboardingDone: false,
+      };
+    }
+
+    function saveState(state) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (_) {}
+    }
+
+    let state = loadState();
+
+    function applyWidgetVars(el) {
+      const neu = getNeuShadows(state.backgroundColor);
+      el.style.setProperty('--bg-color', state.backgroundColor);
+      el.style.setProperty('--accent-color', state.accentColor);
+      el.style.setProperty('--text-color', state.textColor);
+      el.style.setProperty('--neu-shadow', neu.shadow);
+      el.style.setProperty('--neu-shadow-sm', neu.shadowSm);
+      el.style.setProperty('--neu-shadow-xs', neu.shadowXs);
+      el.style.setProperty('--neu-inset-sm', neu.insetSm);
+      el.style.background = state.backgroundColor;
+      el.style.boxShadow = neu.shadow;
+      el.style.color = state.textColor;
+    }
+
+    function renderOnboarding() {
+      const suggested = getContrastTextColor(state.backgroundColor);
+      const html = `
+        <div class="onboarding-root">
+          <div class="onboarding-window">
+            <div class="onboarding-title-bar">
+              <div class="onboarding-dots">
+                <span class="onboarding-dot red"></span>
+                <span class="onboarding-dot yellow"></span>
+                <span class="onboarding-dot green"></span>
+              </div>
+              <div class="onboarding-bar-title">위젯 색상 설정</div>
+              <div style="flex:1"></div>
+            </div>
+            <div class="onboarding-content">
+              <h1>색상 선택</h1>
+              <p>위젯에 적용할 배경색, 강조색, 텍스트 색상을 선택하세요.</p>
+
+              <label class="onboarding-label-text">배경색 (Background)</label>
+              <div class="onboarding-input-color-wrap">
+                <input type="color" id="bgColor" value="${state.backgroundColor}">
+                <input type="text" id="bgText" value="${state.backgroundColor}" placeholder="#E8ECEF">
+              </div>
+              <p class="onboarding-hint">뉴모피즘 그림자(밝은/어두운)가 이 색에서 자동 계산됩니다.</p>
+
+              <label class="onboarding-label-text">강조색 (Accent)</label>
+              <div class="onboarding-input-color-wrap">
+                <input type="color" id="accentColor" value="${state.accentColor}">
+                <input type="text" id="accentText" value="${state.accentColor}" placeholder="#22c55e">
+              </div>
+              <p class="onboarding-hint">토글 ON, 시계, 날씨 아이콘, 새로고침 버튼에 적용됩니다.</p>
+
+              <label class="onboarding-label-text">텍스트 색상 (Text)</label>
+              <div class="onboarding-input-color-wrap">
+                <input type="color" id="textColor" value="${state.textColor}">
+                <input type="text" id="textText" value="${state.textColor}" placeholder="#3a4556">
+              </div>
+              <button type="button" class="onboarding-input-text" id="suggestText" style="cursor:pointer;width:auto">배경 대비 자동 제안: ${suggested}</button>
+
+              <button type="button" class="onboarding-apply-btn" id="applyBtn" style="background:${state.accentColor}">적용하고 위젯 보기</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('app').innerHTML = html;
+
+      function updateState(updates) {
+        state = { ...state, ...updates };
+        saveState(state);
+        document.getElementById('applyBtn').style.background = state.accentColor;
+      }
+
+      document.getElementById('bgColor').oninput = function() {
+        updateState({ backgroundColor: this.value });
+        document.getElementById('bgText').value = this.value;
+      };
+      document.getElementById('bgText').oninput = function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+          updateState({ backgroundColor: this.value });
+          document.getElementById('bgColor').value = this.value;
+        }
+      };
+      document.getElementById('accentColor').oninput = function() {
+        updateState({ accentColor: this.value });
+        document.getElementById('accentText').value = this.value;
+      };
+      document.getElementById('accentText').oninput = function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+          updateState({ accentColor: this.value });
+          document.getElementById('accentColor').value = this.value;
+        }
+      };
+      document.getElementById('textColor').oninput = function() {
+        updateState({ textColor: this.value });
+        document.getElementById('textText').value = this.value;
+      };
+      document.getElementById('textText').oninput = function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+          updateState({ textColor: this.value });
+          document.getElementById('textColor').value = this.value;
+        }
+      };
+      document.getElementById('suggestText').onclick = function() {
+        const s = getContrastTextColor(state.backgroundColor);
+        updateState({ textColor: s });
+        document.getElementById('textColor').value = s;
+        document.getElementById('textText').value = s;
+        this.textContent = '배경 대비 자동 제안: ' + s;
+      };
+      document.getElementById('applyBtn').onclick = function() {
+        state.onboardingDone = true;
+        saveState(state);
+        render();
+      };
+    }
+
+    function renderWidget() {
+      const size = 140, strokeWidth = 10, r = size / 2 - strokeWidth / 2;
+      const circumference = 2 * Math.PI * r;
+      const now = new Date();
+      const progress = (now.getHours() * 60 + now.getMinutes()) / (24 * 60);
+      const strokeDashoffset = circumference * (1 - progress);
+      const innerSize = size - strokeWidth * 2;
+
+      const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+      const widgetEl = document.createElement('div');
+      widgetEl.className = 'widget-frame';
+      applyWidgetVars(widgetEl);
+
+      widgetEl.innerHTML = `
+        <div class="widget-row-top">
+          <div class="widget-clock-wrap" style="width:${size}px;height:${size}px">
+            <svg style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)" width="${size}" height="${size}">
+              <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--accent-color)" stroke-width="${strokeWidth}" stroke-linecap="round"
+                stroke-dasharray="${circumference}" stroke-dashoffset="${strokeDashoffset}"/>
+            </svg>
+            <div class="widget-clock-inner" style="position:absolute;left:${strokeWidth}px;top:${strokeWidth}px;width:${innerSize}px;height:${innerSize}px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg-color);box-shadow:var(--neu-shadow)">
+              <span class="widget-time" style="font-size:1.875rem;font-weight:600;letter-spacing:-0.025em;color:var(--text-color)">${timeStr}</span>
+            </div>
+          </div>
+          <button type="button" class="widget-weather-btn" style="background:var(--bg-color);box-shadow:var(--neu-shadow-sm)" aria-label="날씨">☀️</button>
+        </div>
+        <div class="widget-icons">
+          <button type="button" class="widget-icon-btn widget-icon-active" data-active="true">😊</button>
+          <button type="button" class="widget-icon-btn" data-active="false">✦</button>
+          <button type="button" class="widget-icon-btn" data-active="false">☁</button>
+        </div>
+        <div class="widget-toggles">
+          <div class="widget-toggle-row">
+            <span class="widget-toggle-label" style="color:var(--text-color)">Morning Page</span>
+            <button type="button" class="widget-toggle-track" data-label="Morning Page" style="background:var(--accent-color);box-shadow:var(--neu-inset-sm)">
+              <span class="widget-toggle-thumb on" style="box-shadow:var(--neu-shadow-xs)"></span>
+            </button>
+          </div>
+          <div class="widget-toggle-row">
+            <span class="widget-toggle-label" style="color:var(--text-color)">Daily Diary</span>
+            <button type="button" class="widget-toggle-track" data-label="Daily Diary" style="background:var(--bg-color);box-shadow:var(--neu-inset-sm)">
+              <span class="widget-toggle-thumb off" style="box-shadow:var(--neu-shadow-xs)"></span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      widgetEl.querySelectorAll('.widget-clock-inner').forEach(function(inner) {
+        inner.style.setProperty('--bg-color', state.backgroundColor);
+        inner.style.setProperty('--neu-shadow', getNeuShadows(state.backgroundColor).shadow);
+      });
+
+      widgetEl.querySelectorAll('.widget-icon-btn').forEach(function(btn) {
+        var active = btn.getAttribute('data-active') === 'true';
+        btn.style.background = active ? 'var(--accent-color)' : 'var(--bg-color)';
+        btn.style.color = active ? '#fff' : 'var(--text-color)';
+        btn.style.boxShadow = 'var(--neu-shadow-xs)';
+        btn.onclick = function() {
+          widgetEl.querySelectorAll('.widget-icon-btn').forEach(function(b) {
+            b.setAttribute('data-active', 'false');
+            b.style.background = 'var(--bg-color)';
+            b.style.color = 'var(--text-color)';
+          });
+          btn.setAttribute('data-active', 'true');
+          btn.style.background = 'var(--accent-color)';
+          btn.style.color = '#fff';
+        };
+      });
+
+      widgetEl.querySelectorAll('.widget-toggle-track').forEach(function(track) {
+        var thumb = track.querySelector('.widget-toggle-thumb');
+        var on = track.getAttribute('data-label') === 'Morning Page';
+        track.onclick = function() {
+          on = !on;
+          track.style.background = on ? 'var(--accent-color)' : 'var(--bg-color)';
+          thumb.classList.toggle('on', on);
+          thumb.classList.toggle('off', !on);
+          thumb.style.left = on ? '22px' : '4px';
+        };
+      });
+
+      var clockTimeEl = widgetEl.querySelector('.widget-time');
+      var clockInner = widgetEl.querySelector('.widget-clock-inner');
+      setInterval(function() {
+        var now = new Date();
+        clockTimeEl.textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        var progress = (now.getHours() * 60 + now.getMinutes()) / (24 * 60);
+        var circ = 2 * Math.PI * r;
+        var circle = widgetEl.querySelector('circle');
+        if (circle) circle.setAttribute('stroke-dashoffset', circ * (1 - progress));
+      }, 1000);
+
+      var back = document.createElement('p');
+      back.className = 'back-link';
+      back.textContent = '색상 다시 설정';
+      back.onclick = function() {
+        state.onboardingDone = false;
+        saveState(state);
+        render();
+      };
+
+      document.getElementById('app').innerHTML = '';
+      document.getElementById('app').appendChild(widgetEl);
+      document.getElementById('app').appendChild(back);
+    }
+
+    function render() {
+      if (state.onboardingDone) renderWidget();
+      else renderOnboarding();
+    }
+
+    render();
+  </script>
+</body>
+</html>
