@@ -444,53 +444,30 @@
         <input type="url" id="link2Input" placeholder="https://... (Button 3)">
       </div>
 
-      <!-- Step 3: Notion Integration (OAuth 2.0) -->
+      <!-- Step 3: Notion Integration (API Key) -->
       <div class="step" id="step3">
         <h1>Connect Notion</h1>
-        <p>Link your Notion workspace via OAuth. Your token is never stored on any server — it stays in your browser only.</p>
+        <p>Internal Integration 토큰을 입력하면 데이터베이스 목록을 불러옵니다.</p>
 
-        <div id="notionDisconnected">
-          <div style="text-align: center; padding: 20px 0 16px;">
-            <div style="width: 56px; height: 56px; border-radius: 16px; background: var(--neu-bg); box-shadow: var(--neu-shadow-xs); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </div>
-            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-              Click below to authorize with Notion.<br>
-              We'll request access to a database you choose.
-            </div>
-          </div>
-          <button class="apply-btn" id="notionConnectBtn" onclick="startNotionOAuth()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <div id="notionStep3a">
+          <label class="label-text">Notion API Token</label>
+          <input type="password" id="notionTokenInput" placeholder="ntn_..." style="margin-bottom: 10px;">
+          <button class="apply-btn" id="notionLoadDbBtn" onclick="loadDatabases()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 100 100" fill="none"><path d="M6.017 4.313l55.333-4.087c6.797-.583 8.543-.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277-1.553 6.807-6.99 7.193L24.467 99.967c-4.08.193-6.023-.39-8.16-3.113L3.3 79.94c-2.333-3.113-3.3-5.443-3.3-8.167V11.113c0-3.497 1.553-6.413 6.017-6.8z" fill="#fff"/><path d="M61.35.227L6.017 4.313C1.553 4.7 0 7.617 0 11.113v60.66c0 2.723.967 5.053 3.3 8.167l12.007 16.913c2.137 2.723 4.08 3.307 8.16 3.113l64.257-3.89c5.437-.387 6.99-2.917 6.99-7.193V20.64c0-2.21-.86-2.8-3.467-4.72l-.416-.333-17.663-12.443C69.893.037 68.147-.357 61.35.227zM25.92 19.523c-5.247.353-6.437.433-9.417-1.99L8.927 11.507c-.78-.78-.39-1.753 1.163-1.95l52.833-3.887c4.673-.39 7.003 1.17 8.753 2.527l8.94 6.5c.39.193 1.36 1.36.193 1.36l-54.5 3.27-.39.197zm-3.3 69.93V30.407c0-2.527.78-3.697 3.103-3.893l58.937-3.5c2.14-.193 3.107 1.163 3.107 3.693v58.657c0 2.53-.39 4.67-3.883 4.863l-56.403 3.313c-3.497.193-4.86-.973-4.86-3.897zm55.633-57.11c.39 1.557 0 3.113-1.557 3.307l-2.723.583v43.34c-2.333 1.363-4.473 2.14-6.22 2.14-2.917 0-3.69-.973-5.833-3.5l-17.86-28.09v27.12l5.64 1.167s0 3.113-4.277 3.113L33.3 83.14c-.39-.78 0-2.723 1.357-3.11l3.5-.973V43.727L33.3 43.34c-.39-1.557.583-3.89 3.3-4.08l14.163-.973 18.637 28.467V41.587l-4.667-.583c-.39-1.943 1.163-3.5 3.107-3.693l14.413-.967z" fill="#000"/></svg>
-            Connect with Notion
+            Load Databases
           </button>
-          <!-- Developer config: collapsed by default, opens on demand -->
-          <div id="oauthSetupPanel" style="display: none; margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm);">
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">Developer Setup</div>
-            <label class="label-text">Worker Proxy URL</label>
-            <input type="url" id="oauthProxyInput" placeholder="https://your-worker.workers.dev" style="margin-bottom: 8px;">
-            <label class="label-text">Notion OAuth Client ID</label>
-            <input type="text" id="notionClientIdInput" placeholder="your-notion-client-id" style="margin-bottom: 10px;">
-            <button class="apply-btn" onclick="saveOAuthConfig()" style="width: 100%; font-size: 12px;">Save & Connect</button>
-          </div>
+          <div style="margin-top: 10px;"><a href="https://www.notion.so/my-integrations" target="_blank" style="font-size: 12px; color: var(--text-muted);">내 인테그레이션 바로가기 ↗</a></div>
         </div>
 
-        <div id="notionConnected" style="display: none;">
-          <div style="padding: 16px; border-radius: 16px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm); margin-bottom: 14px;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <div id="notionStep3b" style="display: none;">
+          <div style="padding: 12px; border-radius: 14px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm); margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
               <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent);"></div>
               <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Connected</span>
             </div>
-            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
-              Workspace: <strong id="notionWorkspaceName">--</strong><br>
-              Database: <span id="notionDbName">--</span>
-            </div>
           </div>
           <label class="label-text">Database</label>
-          <select id="notionDbSelect" onchange="onNotionDbSelect()" style="margin-bottom: 12px;"></select>
-          <div style="display: flex; gap: 10px;">
-            <button class="apply-btn" onclick="finishOnboarding()" style="flex: 1;">Launch Widget</button>
-            <button class="apply-btn" onclick="disconnectNotion()" style="flex: 0; padding: 13px 16px; background: #d4a0a0; white-space: nowrap;">Disconnect</button>
-          </div>
+          <select id="notionDbSelect" style="margin-bottom: 12px;"></select>
         </div>
 
         <div style="text-align: center; margin-top: 14px;">
@@ -762,8 +739,7 @@
     ],
   };
 
-  // ===== OAuth Config =====
-  const NOTION_REDIRECT_URI = window.location.origin + window.location.pathname;
+  const PROXY_URL = 'https://ritual-tracker-6sly.onrender.com';
 
   // ===== State =====
   let config = loadConfig();
@@ -794,8 +770,6 @@
       link1: '',
       link2: '',
       notion: null,
-      oauthProxyUrl: '',
-      notionClientId: '',
       onboardingDone: false,
     };
   }
@@ -1017,9 +991,47 @@
     if (currentStep === 4) generateEmbedLink();
   }
 
-  function generateEmbedLink() {
-    var url = window.location.origin + window.location.pathname;
-    document.getElementById('embedLinkDisplay').textContent = url;
+  async function generateEmbedLink() {
+    var display = document.getElementById('embedLinkDisplay');
+    display.textContent = 'Generating link...';
+
+    // Collect selected DB
+    var sel = document.getElementById('notionDbSelect');
+    if (sel && sel.value) {
+      var opt = sel.options[sel.selectedIndex];
+      config.notion.databaseId = sel.value;
+      config.notion.databaseName = opt ? opt.textContent : '';
+    }
+
+    var embedConfig = {
+      region: config.region, city: config.city, tz: config.tz,
+      lat: config.lat, lon: config.lon, clockType: config.clockType,
+      bgColor: config.bgColor, textColor: config.textColor, accent: config.accent,
+      label1: config.label1, label2: config.label2,
+      link1: config.link1, link2: config.link2,
+    };
+    if (config.notion && config.notion.accessToken) {
+      embedConfig.notion = {
+        accessToken: config.notion.accessToken,
+        databaseId: config.notion.databaseId,
+        databaseName: config.notion.databaseName,
+      };
+    }
+
+    try {
+      var res = await fetch(PROXY_URL + '/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(embedConfig),
+      });
+      if (!res.ok) throw new Error('Server error');
+      var data = await res.json();
+      var url = window.location.origin + window.location.pathname + '?w=' + data.id;
+      display.textContent = url;
+    } catch (err) {
+      display.textContent = 'Failed to generate link.';
+      console.error(err);
+    }
   }
 
   function copyEmbedLink() {
@@ -1027,7 +1039,6 @@
     navigator.clipboard.writeText(url).then(function() {
       showToast('Link copied!');
     }).catch(function() {
-      // Fallback for older browsers
       var ta = document.createElement('textarea');
       ta.value = url;
       document.body.appendChild(ta);
@@ -1064,131 +1075,61 @@
     document.getElementById('link1Input').value = config.link1 || '';
     document.getElementById('link2Input').value = config.link2 || '';
     selectClock(config.clockType);
-    renderNotionStep();
   }
 
-  // ===== Notion OAuth 2.0 =====
-  function renderNotionStep() {
-    const connected = config.notion && config.notion.accessToken;
-    document.getElementById('notionDisconnected').style.display = connected ? 'none' : 'block';
-    document.getElementById('notionConnected').style.display = connected ? 'block' : 'none';
-    if (connected) {
-      document.getElementById('notionWorkspaceName').textContent = config.notion.workspaceName || 'Connected';
-      document.getElementById('notionDbName').textContent = config.notion.databaseName || 'Not selected';
-      fetchNotionDatabases();
-    } else {
-      document.getElementById('oauthProxyInput').value = config.oauthProxyUrl || '';
-      document.getElementById('notionClientIdInput').value = config.notionClientId || '';
-      // Hide setup panel if already configured
-      var configured = config.oauthProxyUrl && config.notionClientId;
-      document.getElementById('oauthSetupPanel').style.display = configured ? 'none' : 'none';
-    }
-  }
+  // ===== Notion API Key Connection =====
+  async function loadDatabases() {
+    var token = (document.getElementById('notionTokenInput').value || '').trim();
+    if (!token) { showToast('Please enter your API token.'); return; }
 
-  function saveOAuthConfig() {
-    config.oauthProxyUrl = (document.getElementById('oauthProxyInput').value || '').trim().replace(/\/+$/, '');
-    config.notionClientId = (document.getElementById('notionClientIdInput').value || '').trim();
-    saveConfig();
-    if (!config.notionClientId || !config.oauthProxyUrl) {
-      showToast('Please fill in both fields.');
-      return;
-    }
-    document.getElementById('oauthSetupPanel').style.display = 'none';
-    launchNotionOAuth();
-  }
+    document.getElementById('notionLoadDbBtn').textContent = 'Loading...';
+    document.getElementById('notionLoadDbBtn').disabled = true;
 
-  function startNotionOAuth() {
-    if (!config.notionClientId || !config.oauthProxyUrl) {
-      // Show the developer setup panel
-      document.getElementById('oauthSetupPanel').style.display = 'block';
-      document.getElementById('oauthProxyInput').focus();
-      return;
-    }
-    launchNotionOAuth();
-  }
-
-  function launchNotionOAuth() {
-    const state = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
-    sessionStorage.setItem('notion_oauth_state', state);
-    const authUrl = `https://api.notion.com/v1/oauth/authorize?client_id=${encodeURIComponent(config.notionClientId)}&response_type=code&owner=user&redirect_uri=${encodeURIComponent(NOTION_REDIRECT_URI)}&state=${encodeURIComponent(state)}`;
-    const w = 500, h = 700;
-    const left = (screen.width - w) / 2, top = (screen.height - h) / 2;
-    const popup = window.open(authUrl, 'notion_oauth', `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`);
-    const pollTimer = setInterval(() => {
-      if (popup && popup.closed) { clearInterval(pollTimer); config = loadConfig(); renderNotionStep(); }
-    }, 500);
-  }
-
-  async function handleOAuthCallback() {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    const error = params.get('error');
-    if (!code) return false;
-    const cleanUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, document.title, cleanUrl);
-    if (error) { showToast('Notion authorization was denied.'); return true; }
-    const savedState = sessionStorage.getItem('notion_oauth_state');
-    if (savedState && state !== savedState) { showToast('OAuth state mismatch.'); return true; }
-    sessionStorage.removeItem('notion_oauth_state');
     try {
-      document.getElementById('notionConnectBtn').textContent = 'Connecting...';
-      document.getElementById('notionConnectBtn').disabled = true;
-      const res = await fetch(`${config.oauthProxyUrl}/auth/token`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, redirect_uri: NOTION_REDIRECT_URI }),
+      var res = await fetch(PROXY_URL + '/api/notion/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Notion-Token': token },
+        body: JSON.stringify({ filter: { value: 'database', property: 'object' }, page_size: 50 }),
       });
-      if (!res.ok) throw new Error('Token exchange failed');
-      const data = await res.json();
-      config.notion = { accessToken: data.access_token, workspaceName: data.workspace_name || '', workspaceIcon: data.workspace_icon || '', botId: data.bot_id || '', databaseId: '', databaseName: '' };
-      saveConfig(); renderNotionStep(); showToast('Connected to Notion!');
-      if (window.opener) { window.opener.postMessage({ type: 'notion-oauth-done' }, '*'); window.close(); }
-    } catch (err) { showToast('Failed to connect.'); console.error(err); }
-    return true;
+      if (!res.ok) throw new Error('Failed to fetch databases');
+      var data = await res.json();
+      if (!data.results || !data.results.length) throw new Error('No databases found');
+
+      config.notion = { accessToken: token, databaseId: '', databaseName: '' };
+      saveConfig();
+
+      var sel = document.getElementById('notionDbSelect');
+      sel.innerHTML = data.results.map(function(db) {
+        var title = (db.title && db.title[0]) ? db.title[0].plain_text : 'Untitled';
+        return '<option value="' + db.id + '">' + title + '</option>';
+      }).join('');
+
+      document.getElementById('notionStep3a').style.display = 'none';
+      document.getElementById('notionStep3b').style.display = 'block';
+      showToast('Connected! Select a database.');
+    } catch (err) {
+      console.error(err);
+      showToast('Connection failed. Check your token.');
+    }
+
+    document.getElementById('notionLoadDbBtn').innerHTML = '<svg width="16" height="16" viewBox="0 0 100 100" fill="none"><path d="M6.017 4.313l55.333-4.087c6.797-.583 8.543-.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277-1.553 6.807-6.99 7.193L24.467 99.967c-4.08.193-6.023-.39-8.16-3.113L3.3 79.94c-2.333-3.113-3.3-5.443-3.3-8.167V11.113c0-3.497 1.553-6.413 6.017-6.8z" fill="#fff"/><path d="M61.35.227L6.017 4.313C1.553 4.7 0 7.617 0 11.113v60.66c0 2.723.967 5.053 3.3 8.167l12.007 16.913c2.137 2.723 4.08 3.307 8.16 3.113l64.257-3.89c5.437-.387 6.99-2.917 6.99-7.193V20.64c0-2.21-.86-2.8-3.467-4.72l-.416-.333-17.663-12.443C69.893.037 68.147-.357 61.35.227z" fill="#000"/></svg> Load Databases';
+    document.getElementById('notionLoadDbBtn').disabled = false;
   }
-
-  window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'notion-oauth-done') { config = loadConfig(); renderNotionStep(); }
-  });
-
-  function disconnectNotion() { config.notion = null; saveConfig(); renderNotionStep(); showToast('Notion disconnected.'); }
 
   // ===== Notion API Layer =====
   async function notionFetch(endpoint, options = {}) {
-    if (!config.notion || !config.notion.accessToken || !config.oauthProxyUrl) return null;
+    if (!config.notion || !config.notion.accessToken) return null;
     try {
       const fetchOpts = {
         method: options.method || 'GET',
         headers: { 'Content-Type': 'application/json', 'X-Notion-Token': config.notion.accessToken },
       };
       if (options.body) fetchOpts.body = JSON.stringify(options.body);
-      const res = await fetch(`${config.oauthProxyUrl}/api/notion${endpoint}`, fetchOpts);
+      const res = await fetch(`${PROXY_URL}/api/notion${endpoint}`, fetchOpts);
       if (!res.ok) throw new Error(`Notion API ${res.status}`);
       const text = await res.text();
       return text ? JSON.parse(text) : {};
     } catch (err) { console.error('Notion API error:', err); return null; }
-  }
-
-  async function fetchNotionDatabases() {
-    const data = await notionFetch('/search', { method: 'POST', body: { filter: { value: 'database', property: 'object' }, page_size: 50 } });
-    if (!data || !data.results) return;
-    const sel = document.getElementById('notionDbSelect');
-    sel.innerHTML = '<option value="">Select a database...</option>' +
-      data.results.map(db => {
-        const title = db.title && db.title[0] ? db.title[0].plain_text : 'Untitled';
-        return `<option value="${db.id}" ${db.id === (config.notion && config.notion.databaseId) ? 'selected' : ''}>${title}</option>`;
-      }).join('');
-  }
-
-  async function onNotionDbSelect() {
-    const sel = document.getElementById('notionDbSelect');
-    const opt = sel.options[sel.selectedIndex];
-    if (!config.notion || !sel.value) return;
-    config.notion.databaseId = sel.value;
-    config.notion.databaseName = opt ? opt.textContent : '';
-    document.getElementById('notionDbName').textContent = config.notion.databaseName || 'Not selected';
-    saveConfig();
-    await setupNotionDatabase(sel.value);
   }
 
   // Auto-configure database properties when a DB is selected
@@ -1563,15 +1504,45 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  // ===== Embed Config Loading =====
+  async function loadEmbedConfig() {
+    var params = new URLSearchParams(window.location.search);
+    var widgetId = params.get('w');
+    if (!widgetId) return false;
+    try {
+      var res = await fetch(PROXY_URL + '/api/config/' + widgetId);
+      if (!res.ok) return false;
+      var ec = await res.json();
+      config.region = ec.region || config.region;
+      config.city = ec.city || config.city;
+      config.tz = ec.tz || config.tz;
+      config.lat = ec.lat || config.lat;
+      config.lon = ec.lon || config.lon;
+      config.clockType = ec.clockType || config.clockType;
+      config.bgColor = ec.bgColor || config.bgColor;
+      config.textColor = ec.textColor || config.textColor;
+      config.accent = ec.accent || config.accent;
+      config.label1 = ec.label1 || config.label1;
+      config.label2 = ec.label2 || config.label2;
+      config.link1 = ec.link1 || config.link1;
+      config.link2 = ec.link2 || config.link2;
+      if (ec.notion) config.notion = ec.notion;
+      config.onboardingDone = true;
+      return true;
+    } catch (e) {
+      console.error('Failed to load widget config:', e);
+      return false;
+    }
+  }
+
   // ===== Init =====
   window.onload = async () => {
-    const wasCallback = await handleOAuthCallback();
+    var isEmbed = await loadEmbedConfig();
     document.getElementById('regionSelect').value = config.region;
     populateCities();
     document.getElementById('bgColorPicker').value = config.bgColor || '#E8ECEF';
     document.getElementById('textColorPicker').value = config.textColor || '#3a4556';
-    renderNotionStep();
-    if (config.onboardingDone && !wasCallback) {
+    if (isEmbed) {
       document.getElementById('onboardingWindow').classList.add('hidden');
     }
     initWidget();
