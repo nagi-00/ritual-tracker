@@ -1187,9 +1187,15 @@
     document.getElementById('onboardingWindow').classList.remove('hidden');
     document.getElementById('regionSelect').value = config.region;
     populateCities();
-    document.getElementById('bgColorPicker').value = config.bgColor || '#E8ECEF';
-    document.getElementById('textColorPicker').value = config.textColor || '#3a4556';
-    document.getElementById('accentColorPicker').value = config.accent;
+    // Reset widget preview to default colors
+    config.bgColor = '#E8ECEF';
+    config.textColor = '#3a4556';
+    config.accent = '#a8c5a0';
+    applyNeuTheme('#E8ECEF', '#3a4556');
+    applyAccentToTargets();
+    document.getElementById('bgColorPicker').value = '#E8ECEF';
+    document.getElementById('textColorPicker').value = '#3a4556';
+    document.getElementById('accentColorPicker').value = '#a8c5a0';
     document.getElementById('label1Input').value = config.label1;
     document.getElementById('label2Input').value = config.label2;
     document.getElementById('link1Input').value = config.link1 || '';
@@ -1831,6 +1837,16 @@
     } else if (hasEmbedParam) {
       // Embed param present but config load failed — still hide onboarding, use cached config
       document.getElementById('onboardingWindow').classList.add('hidden');
+    }
+
+    // Reset widget to default colors during onboarding
+    if (!hasEmbedParam && !isEmbed && !config.onboardingDone) {
+      config.bgColor = '#E8ECEF';
+      config.textColor = '#3a4556';
+      config.accent = '#a8c5a0';
+      document.getElementById('bgColorPicker').value = '#E8ECEF';
+      document.getElementById('textColorPicker').value = '#3a4556';
+      document.getElementById('accentColorPicker').value = '#a8c5a0';
     }
     initWidget();
   };
