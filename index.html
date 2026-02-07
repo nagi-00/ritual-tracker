@@ -348,6 +348,32 @@
     }
     #toast.show { bottom: 40px; }
 
+    /* Diary date selector */
+    .diary-date-row {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
+    .diary-date-option {
+      flex: 1; display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 12px; cursor: pointer;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      font-size: 12px; font-weight: 600; color: var(--text-secondary);
+      transition: all 0.2s; border: none;
+    }
+    .diary-date-option:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .diary-date-option.selected { box-shadow: var(--neu-inset); color: var(--text-primary); }
+    .diary-date-option .date-check {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .diary-date-option.selected .date-check {
+      background: var(--accent); box-shadow: none;
+    }
+    .diary-date-option.selected .date-check::after {
+      content: '\2713'; font-size: 10px; font-weight: 700; color: #fff;
+    }
+
     /* Date info */
     .date-info {
       font-size: 11px; color: var(--text-muted); font-weight: 600;
@@ -467,7 +493,7 @@
             </div>
           </div>
           <label class="label-text">Database</label>
-          <select id="notionDbSelect" style="margin-bottom: 12px;"></select>
+          <select id="notionDbSelect" style="margin-bottom: 12px;" onchange="onDbSelectChange()"></select>
         </div>
       </div>
 
@@ -586,6 +612,17 @@
   <div class="modal-box" id="modalDiary" style="display:none;">
     <h2>Daily Diary</h2>
     <div class="modal-sub">Write down 3 things you're grateful for today.</div>
+    <label class="label-text">Save to date</label>
+    <div class="diary-date-row" id="diaryDateRow">
+      <button class="diary-date-option selected" id="diaryDateToday" onclick="selectDiaryDate('today')">
+        <span class="date-check"></span>
+        <span id="diaryDateTodayLabel">Today</span>
+      </button>
+      <button class="diary-date-option" id="diaryDateYesterday" onclick="selectDiaryDate('yesterday')">
+        <span class="date-check"></span>
+        <span id="diaryDateYesterdayLabel">Yesterday</span>
+      </button>
+    </div>
     <label class="label-text">How are you feeling?</label>
     <div class="mood-row" id="moodRow">
       <button class="mood-btn" data-mood="great" onclick="selectMood(this)" title="Great">
@@ -743,6 +780,7 @@
   let selectedMood = '';
   let clockInterval = null;
   let weatherCache = null;
+  let diaryDateSelection = 'today'; // 'today' or 'yesterday'
 
   function loadConfig() {
     try {
@@ -777,6 +815,19 @@
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
+  function yesterdayKey() {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatDateLabel(dateStr) {
+    const parts = dateStr.split('-');
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}`;
+  }
+
   function loadTodayData() {
     try {
       const raw = localStorage.getItem(DATA_KEY);
@@ -795,6 +846,32 @@
       all[todayKey()] = todayData;
       localStorage.setItem(DATA_KEY, JSON.stringify(all));
     } catch (_) {}
+  }
+
+  function loadDataForDate(dateKey) {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      if (raw) {
+        const all = JSON.parse(raw);
+        return all[dateKey] || { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+      }
+    } catch (_) {}
+    return { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+  }
+
+  function saveDataForDate(dateKey, data) {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      const all = raw ? JSON.parse(raw) : {};
+      all[dateKey] = data;
+      localStorage.setItem(DATA_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  function selectDiaryDate(which) {
+    diaryDateSelection = which;
+    document.getElementById('diaryDateToday').classList.toggle('selected', which === 'today');
+    document.getElementById('diaryDateYesterday').classList.toggle('selected', which === 'yesterday');
   }
 
   // ===== Onboarding =====
@@ -926,7 +1003,7 @@
 
   function applyNeuTheme(bgHex, textHex) {
     const vars = computeNeuVars(bgHex, textHex);
-    // Apply to widget, modals, and toast only — NOT :root
+    // Apply to widget, modals, toast, and body background
     const targets = [
       document.getElementById('widgetFrame'),
       document.getElementById('modalOverlay'),
@@ -936,6 +1013,8 @@
       if (!el) return;
       Object.entries(vars).forEach(([k, v]) => el.style.setProperty(k, v));
     });
+    // Always keep body background in sync with widget background
+    document.body.style.background = bgHex;
     // Update ring background stroke to match theme
     const ringBg = document.getElementById('ringBg');
     if (ringBg) {
@@ -963,16 +1042,33 @@
     config.textColor = rec;
     document.getElementById('textColorPicker').value = rec;
     applyNeuTheme(config.bgColor, config.textColor);
+    var onboardingWin = document.getElementById('onboardingWindow');
+    if (onboardingWin) {
+      var vars = computeNeuVars(config.bgColor, config.textColor);
+      Object.entries(vars).forEach(function([k, v]) { onboardingWin.style.setProperty(k, v); });
+    }
   }
 
   function onBgColorChange() {
     config.bgColor = document.getElementById('bgColorPicker').value;
     applyNeuTheme(config.bgColor, config.textColor);
+    // Sync page background and onboarding window with widget background
+    document.body.style.background = config.bgColor;
+    var onboardingWin = document.getElementById('onboardingWindow');
+    if (onboardingWin) {
+      var vars = computeNeuVars(config.bgColor, config.textColor);
+      Object.entries(vars).forEach(function([k, v]) { onboardingWin.style.setProperty(k, v); });
+    }
   }
 
   function onTextColorChange() {
     config.textColor = document.getElementById('textColorPicker').value;
     applyNeuTheme(config.bgColor, config.textColor);
+    var onboardingWin = document.getElementById('onboardingWindow');
+    if (onboardingWin) {
+      var vars = computeNeuVars(config.bgColor, config.textColor);
+      Object.entries(vars).forEach(function([k, v]) { onboardingWin.style.setProperty(k, v); });
+    }
   }
 
   function moveStep(n) {
@@ -1098,6 +1194,11 @@
         return '<option value="' + db.id + '">' + title + '</option>';
       }).join('');
 
+      // Auto-setup properties for the first database
+      if (data.results.length) {
+        await setupNotionDatabase(data.results[0].id);
+      }
+
       document.getElementById('notionStep3a').style.display = 'none';
       document.getElementById('notionStep3b').style.display = 'block';
       showToast('Connected! Select a database.');
@@ -1108,6 +1209,13 @@
 
     document.getElementById('notionLoadDbBtn').innerHTML = '<svg width="16" height="16" viewBox="0 0 100 100" fill="none"><path d="M6.017 4.313l55.333-4.087c6.797-.583 8.543-.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277-1.553 6.807-6.99 7.193L24.467 99.967c-4.08.193-6.023-.39-8.16-3.113L3.3 79.94c-2.333-3.113-3.3-5.443-3.3-8.167V11.113c0-3.497 1.553-6.413 6.017-6.8z" fill="#fff"/><path d="M61.35.227L6.017 4.313C1.553 4.7 0 7.617 0 11.113v60.66c0 2.723.967 5.053 3.3 8.167l12.007 16.913c2.137 2.723 4.08 3.307 8.16 3.113l64.257-3.89c5.437-.387 6.99-2.917 6.99-7.193V20.64c0-2.21-.86-2.8-3.467-4.72l-.416-.333-17.663-12.443C69.893.037 68.147-.357 61.35.227z" fill="#000"/></svg> Load Databases';
     document.getElementById('notionLoadDbBtn').disabled = false;
+  }
+
+  async function onDbSelectChange() {
+    var sel = document.getElementById('notionDbSelect');
+    if (sel && sel.value) {
+      await setupNotionDatabase(sel.value);
+    }
   }
 
   // ===== Notion API Layer =====
@@ -1157,15 +1265,36 @@
     return chunks;
   }
 
-  function buildNotionChildren() {
+  // buildNotionChildren and findTodayPage replaced by buildNotionChildrenForData and findPageByDate in syncToNotion
+
+  async function clearPageChildren(pageId) {
+    const blocks = await notionFetch('/blocks/' + pageId + '/children');
+    if (!blocks || !blocks.results) return;
+    for (var i = 0; i < blocks.results.length; i++) {
+      await notionFetch('/blocks/' + blocks.results[i].id, { method: 'DELETE' });
+    }
+  }
+
+  async function findPageByDate(dateStr) {
+    const query = await notionFetch('/databases/' + config.notion.databaseId + '/query', {
+      method: 'POST',
+      body: { filter: { property: 'Date', date: { equals: dateStr } }, page_size: 1 }
+    });
+    if (query && query.results && query.results.length) {
+      return query.results[0].id;
+    }
+    return null;
+  }
+
+  function buildNotionChildrenForData(data) {
     const children = [];
-    const hasMorning = todayData.morning && todayData.morning.trim();
-    const hasGratitude = todayData.gratitude && todayData.gratitude.some(function(g) { return g.trim(); });
-    const hasDiary = todayData.diary && todayData.diary.trim();
+    const hasMorning = data.morning && data.morning.trim();
+    const hasGratitude = data.gratitude && data.gratitude.some(function(g) { return g.trim(); });
+    const hasDiary = data.diary && data.diary.trim();
 
     if (hasMorning) {
       children.push({ object: 'block', type: 'heading_2', heading_2: { rich_text: [{ type: 'text', text: { content: '\u{1F4DD} Morning Page' } }] } });
-      chunkText(todayData.morning).forEach(function(chunk) {
+      chunkText(data.morning).forEach(function(chunk) {
         children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: chunk } }] } });
       });
     }
@@ -1177,7 +1306,7 @@
     if (hasGratitude || hasDiary) {
       children.push({ object: 'block', type: 'heading_2', heading_2: { rich_text: [{ type: 'text', text: { content: '\u{1F4D3} Daily Diary' } }] } });
       if (hasGratitude) {
-        todayData.gratitude.filter(function(g) { return g.trim(); }).forEach(function(g) {
+        data.gratitude.filter(function(g) { return g.trim(); }).forEach(function(g) {
           children.push({ object: 'block', type: 'bulleted_list_item', bulleted_list_item: { rich_text: [{ type: 'text', text: { content: g } }] } });
         });
       }
@@ -1185,7 +1314,7 @@
         children.push({ object: 'block', type: 'divider', divider: {} });
       }
       if (hasDiary) {
-        chunkText(todayData.diary).forEach(function(chunk) {
+        chunkText(data.diary).forEach(function(chunk) {
           children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: chunk } }] } });
         });
       }
@@ -1194,32 +1323,12 @@
     return children;
   }
 
-  async function findTodayPage() {
-    if (todayData.notionPageId) return todayData.notionPageId;
-    const query = await notionFetch('/databases/' + config.notion.databaseId + '/query', {
-      method: 'POST',
-      body: { filter: { property: 'Date', date: { equals: todayKey() } }, page_size: 1 }
-    });
-    if (query && query.results && query.results.length) {
-      todayData.notionPageId = query.results[0].id;
-      saveTodayData();
-      return todayData.notionPageId;
-    }
-    return null;
-  }
-
-  async function clearPageChildren(pageId) {
-    const blocks = await notionFetch('/blocks/' + pageId + '/children');
-    if (!blocks || !blocks.results) return;
-    for (var i = 0; i < blocks.results.length; i++) {
-      await notionFetch('/blocks/' + blocks.results[i].id, { method: 'DELETE' });
-    }
-  }
-
-  async function syncToNotion() {
+  async function syncToNotion(targetDateStr, targetData) {
     if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
-    var dateStr = todayKey();
-    var d = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    var dateStr = targetDateStr || todayKey();
+    var data = targetData || todayData;
+    var parts = dateStr.split('-');
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     var days = ['일', '월', '화', '수', '목', '금', '토'];
     var dateLabel = dateStr + ' ' + days[d.getDay()];
 
@@ -1227,21 +1336,28 @@
       'Name': { title: [{ text: { content: dateLabel } }] },
       'Date': { date: { start: dateStr } },
     };
-    if (todayData.mood) {
-      properties['Mood'] = { select: { name: todayData.mood } };
+    if (data.mood) {
+      properties['Mood'] = { select: { name: data.mood } };
     } else {
       properties['Mood'] = { select: null };
     }
-    var gratitude = todayData.gratitude || ['', '', ''];
+    var gratitude = data.gratitude || ['', '', ''];
     for (var i = 0; i < 3; i++) {
       var val = (gratitude[i] || '').trim();
       properties['Gratitude ' + (i + 1)] = { rich_text: val ? [{ type: 'text', text: { content: val } }] : [] };
     }
 
-    var children = buildNotionChildren();
+    var children = buildNotionChildrenForData(data);
 
     try {
-      var pageId = await findTodayPage();
+      // Use cached page ID only for today's date
+      var pageId = null;
+      if (dateStr === todayKey() && todayData.notionPageId) {
+        pageId = todayData.notionPageId;
+      } else {
+        pageId = await findPageByDate(dateStr);
+      }
+
       if (pageId) {
         await notionFetch('/pages/' + pageId, { method: 'PATCH', body: { properties: properties } });
         await clearPageChildren(pageId);
@@ -1254,8 +1370,15 @@
           body: { parent: { database_id: config.notion.databaseId }, properties: properties, children: children }
         });
         if (result && result.id) {
-          todayData.notionPageId = result.id;
-          saveTodayData();
+          if (dateStr === todayKey()) {
+            todayData.notionPageId = result.id;
+            saveTodayData();
+          } else {
+            // Cache the page ID for the target date
+            var targetDataObj = loadDataForDate(dateStr);
+            targetDataObj.notionPageId = result.id;
+            saveDataForDate(dateStr, targetDataObj);
+          }
         }
       }
     } catch (err) {
@@ -1421,6 +1544,12 @@
     if (idx === 0) {
       document.getElementById('morningText').value = todayData.morning || '';
     } else {
+      // Reset date selection to today
+      diaryDateSelection = 'today';
+      selectDiaryDate('today');
+      document.getElementById('diaryDateTodayLabel').textContent = 'Today (' + formatDateLabel(todayKey()) + ')';
+      document.getElementById('diaryDateYesterdayLabel').textContent = 'Yesterday (' + formatDateLabel(yesterdayKey()) + ')';
+
       selectedMood = todayData.mood || '';
       document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', b.dataset.mood === selectedMood));
       document.getElementById('diaryText').value = todayData.diary || '';
@@ -1456,24 +1585,40 @@
     updateToggles();
     closeModal();
     showToast('Morning page saved!');
-    syncToNotion();
+    syncToNotion(todayKey(), todayData);
   }
 
   async function saveDiary() {
-    todayData.mood = selectedMood;
-    todayData.gratitude = [
+    var targetDateKey = diaryDateSelection === 'yesterday' ? yesterdayKey() : todayKey();
+    var targetData;
+
+    if (targetDateKey === todayKey()) {
+      targetData = todayData;
+    } else {
+      targetData = loadDataForDate(targetDateKey);
+    }
+
+    targetData.mood = selectedMood;
+    targetData.gratitude = [
       document.getElementById('grat0').value,
       document.getElementById('grat1').value,
       document.getElementById('grat2').value,
     ];
-    todayData.diary = document.getElementById('diaryText').value;
-    todayData.diaryDone = !!(todayData.diary.trim() || todayData.gratitude.some(g => g.trim()) || todayData.mood);
-    saveTodayData();
-    updateToggles();
-    updateMoodIcon();
+    targetData.diary = document.getElementById('diaryText').value;
+    targetData.diaryDone = !!(targetData.diary.trim() || targetData.gratitude.some(g => g.trim()) || targetData.mood);
+
+    saveDataForDate(targetDateKey, targetData);
+
+    if (targetDateKey === todayKey()) {
+      todayData = targetData;
+      updateToggles();
+      updateMoodIcon();
+    }
+
     closeModal();
-    showToast('Daily diary saved!');
-    syncToNotion();
+    var dateLabel = diaryDateSelection === 'yesterday' ? 'yesterday' : 'today';
+    showToast('Daily diary saved for ' + dateLabel + '!');
+    syncToNotion(targetDateKey, targetData);
   }
 
   // ===== Refresh =====
@@ -1538,6 +1683,10 @@
     document.getElementById('textColorPicker').value = config.textColor || '#3a4556';
     if (isEmbed) {
       document.getElementById('onboardingWindow').classList.add('hidden');
+      // Auto-setup Notion database properties on embed load
+      if (config.notion && config.notion.databaseId) {
+        setupNotionDatabase(config.notion.databaseId);
+      }
     }
     initWidget();
   };
