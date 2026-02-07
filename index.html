@@ -311,13 +311,13 @@
     .modal-btn.save:hover { box-shadow: 2px 2px 4px rgba(120,160,110,0.5), -2px -2px 4px rgba(255,255,255,0.4); }
 
     /* Mood selector in modal */
-    .mood-row { display: flex; gap: 8px; margin-bottom: 16px; justify-content: center; }
+    .mood-row { display: flex; gap: 12px; margin-bottom: 16px; justify-content: center; }
     .mood-btn {
       width: 40px; height: 40px; border-radius: 50%; border: none;
       background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
       cursor: pointer; transition: all 0.15s;
       display: flex; align-items: center; justify-content: center;
-      color: var(--text-secondary);
+      color: var(--text-secondary); flex-shrink: 0;
     }
     .mood-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
     .mood-btn.selected { box-shadow: var(--neu-inset); background: var(--accent); color: #fff; }
@@ -530,7 +530,7 @@
       </button>
       <button class="icon-btn" id="iconBtn2" onclick="clickLinkIcon(1)" title="Shortcut 2">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
         </svg>
       </button>
     </div>
@@ -557,24 +557,6 @@
   <div class="modal-box" id="modalMorning" style="display:none;">
     <h2>Morning Page</h2>
     <div class="modal-sub">Write freely. No rules, no judgment.</div>
-    <label class="label-text">How are you feeling?</label>
-    <div class="mood-row" id="moodRow">
-      <button class="mood-btn" data-mood="great" onclick="selectMood(this)" title="Great">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </button>
-      <button class="mood-btn" data-mood="good" onclick="selectMood(this)" title="Good">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </button>
-      <button class="mood-btn" data-mood="okay" onclick="selectMood(this)" title="Okay">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </button>
-      <button class="mood-btn" data-mood="bad" onclick="selectMood(this)" title="Bad">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </button>
-      <button class="mood-btn" data-mood="awful" onclick="selectMood(this)" title="Awful">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </button>
-    </div>
     <textarea id="morningText" placeholder="Start writing your thoughts..."></textarea>
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
@@ -586,6 +568,24 @@
   <div class="modal-box" id="modalDiary" style="display:none;">
     <h2>Daily Diary</h2>
     <div class="modal-sub">Write down 3 things you're grateful for today.</div>
+    <label class="label-text">How are you feeling?</label>
+    <div class="mood-row" id="moodRow">
+      <button class="mood-btn" data-mood="great" onclick="selectMood(this)" title="Great">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="good" onclick="selectMood(this)" title="Good">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="okay" onclick="selectMood(this)" title="Okay">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="bad" onclick="selectMood(this)" title="Bad">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="awful" onclick="selectMood(this)" title="Awful">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><path d="M17 15l-1 4"/></svg>
+      </button>
+    </div>
     <div class="gratitude-list" id="gratitudeList">
       <div class="gratitude-item">
         <span class="gratitude-num">1</span>
@@ -626,12 +626,12 @@
   };
 
   const SVG_MOOD = {
-    great: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-    good: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-    okay: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-    bad: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-    awful: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-    none: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    great: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+    good: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    okay: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    bad: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    awful: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><path d="M17 15l-1 4"/></svg>',
+    none: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
   };
 
   function getWeatherSvg(code) {
@@ -1134,7 +1134,7 @@
   }
 
   function clickMoodIcon() {
-    openModal(0);
+    openModal(1);
   }
 
   // Buttons 1 & 2: Custom links
@@ -1158,9 +1158,9 @@
     document.getElementById('modalDiary').style.display = idx === 1 ? 'block' : 'none';
     if (idx === 0) {
       document.getElementById('morningText').value = todayData.morning || '';
+    } else {
       selectedMood = todayData.mood || '';
       document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', b.dataset.mood === selectedMood));
-    } else {
       document.getElementById('diaryText').value = todayData.diary || '';
       for (let i = 0; i < 3; i++) {
         document.getElementById(`grat${i}`).value = (todayData.gratitude && todayData.gratitude[i]) || '';
@@ -1179,35 +1179,39 @@
   }
 
   function selectMood(btn) {
-    selectedMood = btn.dataset.mood;
+    if (selectedMood === btn.dataset.mood) {
+      selectedMood = '';
+    } else {
+      selectedMood = btn.dataset.mood;
+    }
     document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', b.dataset.mood === selectedMood));
   }
 
   async function saveMorning() {
     todayData.morning = document.getElementById('morningText').value;
-    todayData.mood = selectedMood;
-    todayData.morningDone = !!(todayData.morning.trim() || todayData.mood);
+    todayData.morningDone = !!todayData.morning.trim();
     saveTodayData();
     updateToggles();
-    updateMoodIcon();
     closeModal();
     showToast('Morning page saved!');
     saveToNotion('Morning Page', { text: todayData.morning, mood: todayData.mood });
   }
 
   async function saveDiary() {
+    todayData.mood = selectedMood;
     todayData.gratitude = [
       document.getElementById('grat0').value,
       document.getElementById('grat1').value,
       document.getElementById('grat2').value,
     ];
     todayData.diary = document.getElementById('diaryText').value;
-    todayData.diaryDone = !!(todayData.diary.trim() || todayData.gratitude.some(g => g.trim()));
+    todayData.diaryDone = !!(todayData.diary.trim() || todayData.gratitude.some(g => g.trim()) || todayData.mood);
     saveTodayData();
     updateToggles();
+    updateMoodIcon();
     closeModal();
     showToast('Daily diary saved!');
-    saveToNotion('Daily Diary', { text: todayData.diary, gratitude: todayData.gratitude });
+    saveToNotion('Daily Diary', { text: todayData.diary, gratitude: todayData.gratitude, mood: todayData.mood });
   }
 
   // ===== Refresh =====
