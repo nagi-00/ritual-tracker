@@ -1018,7 +1018,32 @@
   }
 
   function generateEmbedLink() {
-    var url = window.location.origin + window.location.pathname;
+    var embedConfig = {
+      region: config.region,
+      city: config.city,
+      tz: config.tz,
+      lat: config.lat,
+      lon: config.lon,
+      clockType: config.clockType,
+      bgColor: config.bgColor,
+      textColor: config.textColor,
+      accent: config.accent,
+      label1: config.label1,
+      label2: config.label2,
+      link1: config.link1,
+      link2: config.link2,
+      oauthProxyUrl: config.oauthProxyUrl,
+    };
+    if (config.notion) {
+      embedConfig.notion = {
+        accessToken: config.notion.accessToken,
+        databaseId: config.notion.databaseId,
+        databaseName: config.notion.databaseName,
+        workspaceName: config.notion.workspaceName,
+      };
+    }
+    var hash = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(embedConfig)))));
+    var url = window.location.origin + window.location.pathname + '#cfg=' + hash;
     document.getElementById('embedLinkDisplay').textContent = url;
   }
 
@@ -1563,15 +1588,50 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
+  // ===== Embed Config from URL Hash =====
+  function loadEmbedConfig() {
+    var hash = window.location.hash;
+    if (!hash || !hash.startsWith('#cfg=')) return false;
+    try {
+      var encoded = decodeURIComponent(hash.slice(5));
+      var json = decodeURIComponent(escape(atob(encoded)));
+      var embedConfig = JSON.parse(json);
+      // Apply embed config
+      config.region = embedConfig.region || config.region;
+      config.city = embedConfig.city || config.city;
+      config.tz = embedConfig.tz || config.tz;
+      config.lat = embedConfig.lat || config.lat;
+      config.lon = embedConfig.lon || config.lon;
+      config.clockType = embedConfig.clockType || config.clockType;
+      config.bgColor = embedConfig.bgColor || config.bgColor;
+      config.textColor = embedConfig.textColor || config.textColor;
+      config.accent = embedConfig.accent || config.accent;
+      config.label1 = embedConfig.label1 || config.label1;
+      config.label2 = embedConfig.label2 || config.label2;
+      config.link1 = embedConfig.link1 || config.link1;
+      config.link2 = embedConfig.link2 || config.link2;
+      config.oauthProxyUrl = embedConfig.oauthProxyUrl || config.oauthProxyUrl;
+      if (embedConfig.notion) {
+        config.notion = embedConfig.notion;
+      }
+      config.onboardingDone = true;
+      return true;
+    } catch (e) {
+      console.error('Failed to parse embed config:', e);
+      return false;
+    }
+  }
+
   // ===== Init =====
   window.onload = async () => {
+    var isEmbed = loadEmbedConfig();
     const wasCallback = await handleOAuthCallback();
     document.getElementById('regionSelect').value = config.region;
     populateCities();
     document.getElementById('bgColorPicker').value = config.bgColor || '#E8ECEF';
     document.getElementById('textColorPicker').value = config.textColor || '#3a4556';
     renderNotionStep();
-    if (config.onboardingDone && !wasCallback) {
+    if ((config.onboardingDone || isEmbed) && !wasCallback) {
       document.getElementById('onboardingWindow').classList.add('hidden');
     }
     initWidget();
