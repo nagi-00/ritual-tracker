@@ -999,9 +999,7 @@
   }
 
   function applyAccentToTargets() {
-    [document.getElementById('widgetFrame'), document.getElementById('modalOverlay'), document.getElementById('toast')].forEach(el => {
-      if (el) el.style.setProperty('--accent', config.accent);
-    });
+    document.documentElement.style.setProperty('--accent', config.accent);
   }
 
   // ===== Dynamic Neumorphism Color Engine =====
@@ -1063,21 +1061,11 @@
 
   function applyNeuTheme(bgHex, textHex) {
     const vars = computeNeuVars(bgHex, textHex);
-    const targets = [
-      document.getElementById('widgetFrame'),
-      document.getElementById('modalOverlay'),
-      document.getElementById('toast'),
-    ];
-    targets.forEach(el => {
-      if (!el) return;
-      Object.entries(vars).forEach(([k, v]) => el.style.setProperty(k, v));
-    });
-    // Only change body/html background when onboarding is done or in embed mode
-    const onboardingWin = document.getElementById('onboardingWindow');
-    if (!onboardingWin || onboardingWin.classList.contains('hidden')) {
-      document.documentElement.style.background = bgHex;
-      document.body.style.background = bgHex;
-    }
+    // Apply to :root so all var(--neu-*) references update globally
+    const root = document.documentElement;
+    Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+    // Also apply to body background directly
+    document.body.style.background = bgHex;
     // Update ring background stroke to match theme
     const ringBg = document.getElementById('ringBg');
     if (ringBg) {
