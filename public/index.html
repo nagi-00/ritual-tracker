@@ -44,6 +44,18 @@
       width: 100%; max-width: 420px; background: var(--neu-bg); border-radius: 24px;
       box-shadow: var(--neu-shadow); overflow: hidden; display: flex; flex-direction: column;
       z-index: 10; flex-shrink: 0;
+      /* Pin onboarding to default light theme regardless of user-chosen bg */
+      --neu-bg: #E8ECEF;
+      --neu-dark: rgb(163,177,198);
+      --neu-light: rgb(244,246,248);
+      --neu-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(244,246,248,0.5);
+      --neu-shadow-sm: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(244,246,248,0.5);
+      --neu-shadow-xs: 3px 3px 6px rgba(163,177,198,0.45), -3px -3px 6px rgba(244,246,248,0.45);
+      --neu-inset: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(244,246,248,0.6);
+      --neu-inset-sm: inset 2px 2px 5px rgba(163,177,198,0.4), inset -2px -2px 5px rgba(244,246,248,0.5);
+      --text-primary: #3a4556;
+      --text-secondary: #6b7a8d;
+      --text-muted: #8895a7;
     }
     .window.hidden { display: none; }
     .title-bar {
@@ -1774,75 +1786,15 @@
     void btn.offsetWidth;
     btn.classList.add('spinning');
 
-    // Bidirectional sync: pull from Notion first, then update local
-    await pullFromNotion();
-
+    // One-way sync: push local data → Notion database
     todayData = loadTodayData();
+    await syncToNotion(todayKey(), todayData);
+
     updateToggles();
     updateMoodIcon();
     fetchWeather();
     updateDateInfo();
     renderClock();
-  }
-
-  async function pullFromNotion() {
-    if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
-    try {
-      var pageId = await findPageByDate(todayKey());
-      if (!pageId) return;
-
-      // Fetch page properties
-      var page = await notionFetch('/pages/' + pageId);
-      if (!page || !page.properties) return;
-
-      var props = page.properties;
-      // Extract mood
-      if (props['Mood'] && props['Mood'].select && props['Mood'].select.name) {
-        todayData.mood = props['Mood'].select.name;
-      }
-      // Extract gratitude
-      for (var i = 1; i <= 3; i++) {
-        var key = 'Gratitude ' + i;
-        if (props[key] && props[key].rich_text && props[key].rich_text.length) {
-          todayData.gratitude[i - 1] = props[key].rich_text[0].plain_text || '';
-        }
-      }
-
-      // Fetch child blocks for morning page & diary text
-      var blocks = await notionFetch('/blocks/' + pageId + '/children');
-      if (blocks && blocks.results) {
-        var section = '';
-        var morningText = [];
-        var diaryText = [];
-        for (var b = 0; b < blocks.results.length; b++) {
-          var block = blocks.results[b];
-          if (block.type === 'heading_2' && block.heading_2 && block.heading_2.rich_text && block.heading_2.rich_text.length) {
-            var heading = block.heading_2.rich_text[0].plain_text || '';
-            if (heading.indexOf('Morning') !== -1) section = 'morning';
-            else if (heading.indexOf('Diary') !== -1 || heading.indexOf('Daily') !== -1) section = 'diary';
-          } else if (block.type === 'paragraph' && block.paragraph && block.paragraph.rich_text) {
-            var text = block.paragraph.rich_text.map(function(rt) { return rt.plain_text; }).join('');
-            if (section === 'morning') morningText.push(text);
-            else if (section === 'diary') diaryText.push(text);
-          }
-        }
-        if (morningText.length) todayData.morning = morningText.join('\n');
-        if (diaryText.length) todayData.diary = diaryText.join('\n');
-      }
-
-      todayData.notionPageId = pageId;
-      todayData.morningDone = !!(todayData.morning && todayData.morning.trim());
-      todayData.diaryDone = !!(
-        todayData.mood &&
-        todayData.gratitude[0] && todayData.gratitude[0].trim() &&
-        todayData.gratitude[1] && todayData.gratitude[1].trim() &&
-        todayData.gratitude[2] && todayData.gratitude[2].trim() &&
-        todayData.diary && todayData.diary.trim()
-      );
-      saveTodayData();
-    } catch (err) {
-      console.error('Pull from Notion error:', err);
-    }
   }
 
   // ===== Settings Panel =====
