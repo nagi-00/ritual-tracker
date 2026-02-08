@@ -3,1175 +3,745 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ritual Tracker — 노션 저널 위젯</title>
+  <title>Ritual Tracker</title>
   <style>
-    /* ═══════════════════════════════════════════
-       Global Reset & Base
-       ═══════════════════════════════════════════ */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Inter", sans-serif;
       letter-spacing: -0.01em;
       transition: background 0.4s;
     }
     #app {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      width: 100%;
-      max-width: 420px;
-      padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 16px; width: 100%; max-width: 420px; padding: 20px;
     }
 
-    /* ═══════════════════════════════════════════
-       CSS Variables (defaults)
-       ═══════════════════════════════════════════ */
     :root {
-      --bg: #E8ECEF;
-      --accent: #a8c5a0;
-      --text: #3a4556;
-      --text-secondary: #6b7a8d;
-      --text-muted: #8895a7;
-      --neu-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5);
+      --bg: #E8ECEF; --accent: #a8c5a0; --text: #3a4556;
+      --text-sec: #6b7a8d; --text-muted: #8895a7;
+      --neu: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5);
       --neu-sm: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(255,255,255,0.5);
       --neu-xs: 3px 3px 6px rgba(163,177,198,0.45), -3px -3px 6px rgba(255,255,255,0.45);
-      --neu-inset: inset 2px 2px 5px rgba(163,177,198,0.4), inset -2px -2px 5px rgba(255,255,255,0.5);
+      --neu-in: inset 2px 2px 5px rgba(163,177,198,0.4), inset -2px -2px 5px rgba(255,255,255,0.5);
     }
 
-    /* ═══════════════════════════════════════════
-       Onboarding Window
-       ═══════════════════════════════════════════ */
-    .ob-window {
-      width: 100%; max-width: 420px;
-      background: var(--bg);
-      border-radius: 24px;
-      box-shadow: var(--neu-shadow);
-      overflow: hidden;
+    /* ── Onboarding ── */
+    .ob-win { width:100%; max-width:420px; background:var(--bg); border-radius:24px; box-shadow:var(--neu); overflow:hidden; }
+    .ob-bar { height:50px; display:flex; align-items:center; padding:0 18px; border-bottom:1px solid rgba(163,177,198,0.25); }
+    .ob-dots { display:flex; gap:7px; flex:1; }
+    .ob-d { width:10px; height:10px; border-radius:50%; box-shadow:inset 1px 1px 2px rgba(0,0,0,0.1), 1px 1px 2px rgba(255,255,255,0.5); }
+    .ob-d.r{background:#d4a0a0}.ob-d.y{background:#d4d4a0}.ob-d.g{background:#a0c8a0}
+    .ob-t { font-size:12px; font-weight:700; color:var(--text); flex:2; text-align:center; letter-spacing:0.05em; }
+    .ob-body { padding:28px 24px; }
+    .ob-body h2 { font-size:18px; font-weight:800; color:var(--text); margin-bottom:6px; }
+    .ob-body .desc { font-size:12px; color:var(--text-sec); margin-bottom:20px; line-height:1.5; }
+    .ob-steps { display:flex; justify-content:center; gap:8px; margin-bottom:24px; }
+    .ob-sd { width:8px; height:8px; border-radius:50%; background:var(--bg); box-shadow:var(--neu-xs); transition:all 0.3s; }
+    .ob-sd.act { background:var(--accent); box-shadow:0 0 6px rgba(168,197,160,0.6); }
+    .ob-sd.done { background:var(--accent); opacity:0.5; }
+    .ob-lbl { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:6px; }
+    .ob-inp, .ob-sel {
+      width:100%; padding:11px 14px; border-radius:12px; border:none;
+      background:var(--bg); color:var(--text); font-size:13px; outline:none;
+      box-shadow:var(--neu-in); margin-bottom:14px; -webkit-appearance:none; appearance:none;
     }
-    .ob-titlebar {
-      height: 50px;
-      display: flex; align-items: center;
-      padding: 0 18px;
-      border-bottom: 1px solid rgba(163,177,198,0.25);
-    }
-    .ob-dots { display: flex; gap: 7px; flex: 1; }
-    .ob-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1), 1px 1px 2px rgba(255,255,255,0.5);
-    }
-    .ob-dot.r { background: #d4a0a0; } .ob-dot.y { background: #d4d4a0; } .ob-dot.g { background: #a0c8a0; }
-    .ob-title {
-      font-size: 12px; font-weight: 700; color: var(--text);
-      flex: 2; text-align: center; letter-spacing: 0.05em;
-    }
-
-    .ob-body { padding: 28px 24px; }
-    .ob-body h2 { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
-    .ob-body p.desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
-
-    /* Steps indicator */
-    .ob-steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
-    .ob-step-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--bg); box-shadow: var(--neu-xs);
-      transition: all 0.3s;
-    }
-    .ob-step-dot.active { background: var(--accent); box-shadow: 0 0 6px rgba(168,197,160,0.6); }
-    .ob-step-dot.done { background: var(--accent); opacity: 0.5; }
-
-    /* Labels & Inputs */
-    .ob-label {
-      font-size: 10px; font-weight: 700; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 0.06em;
-      display: block; margin-bottom: 6px;
-    }
-    .ob-input, .ob-select {
-      width: 100%; padding: 11px 14px; border-radius: 12px; border: none;
-      background: var(--bg); color: var(--text);
-      font-size: 13px; outline: none;
-      box-shadow: var(--neu-inset);
-      margin-bottom: 14px;
-      -webkit-appearance: none; appearance: none;
-    }
-    .ob-select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238895a7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 32px; }
-    .ob-input:focus, .ob-select:focus {
-      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
-    }
-
-    /* Color picker row */
-    .ob-color-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
-    .ob-color-row input[type="text"] { flex: 1; margin-bottom: 0; }
-    .ob-color-row input[type="color"] {
-      width: 46px; height: 38px; border: none; padding: 3px; cursor: pointer;
-      border-radius: 10px; background: var(--bg); box-shadow: var(--neu-sm);
-      -webkit-appearance: none; appearance: none;
-    }
-    .ob-color-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
-    .ob-color-row input[type="color"]::-webkit-color-swatch { border: none; border-radius: 7px; }
-
-    /* Buttons */
+    .ob-sel { cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238895a7'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:32px; }
+    .ob-inp:focus,.ob-sel:focus { box-shadow:inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65); }
+    .ob-cr { display:flex; gap:10px; align-items:center; margin-bottom:14px; }
+    .ob-cr input[type="text"] { flex:1; margin-bottom:0; }
+    .ob-cr input[type="color"] { width:46px; height:38px; border:none; padding:3px; cursor:pointer; border-radius:10px; background:var(--bg); box-shadow:var(--neu-sm); -webkit-appearance:none; }
+    .ob-cr input[type="color"]::-webkit-color-swatch-wrapper{padding:2px}
+    .ob-cr input[type="color"]::-webkit-color-swatch{border:none;border-radius:7px}
     .ob-btn {
-      width: 100%; padding: 12px; border-radius: 12px; border: none;
-      font-size: 13px; font-weight: 700; color: #fff;
-      cursor: pointer; box-shadow: var(--neu-xs);
-      transition: box-shadow 0.2s, transform 0.1s;
+      width:100%; padding:12px; border-radius:12px; border:none;
+      font-size:13px; font-weight:700; color:#fff; cursor:pointer;
+      box-shadow:var(--neu-xs); transition:box-shadow 0.2s, transform 0.1s;
     }
-    .ob-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
-    .ob-btn:active { box-shadow: var(--neu-inset); transform: scale(0.98); }
-    .ob-btn-secondary {
-      background: var(--bg) !important; color: var(--text) !important;
-      box-shadow: var(--neu-sm); margin-top: 8px;
+    .ob-btn:hover { box-shadow:2px 2px 4px rgba(163,177,198,0.5),-2px -2px 4px rgba(255,255,255,0.5); }
+    .ob-btn:active { box-shadow:var(--neu-in); transform:scale(0.98); }
+    .ob-btn2 { background:var(--bg)!important; color:var(--text)!important; box-shadow:var(--neu-sm); margin-top:8px; }
+    .ob-hint { font-size:10px; color:var(--text-muted); margin-bottom:12px; line-height:1.4; }
+    .ob-og { display:flex; gap:12px; margin-bottom:18px; }
+    .ob-oc {
+      flex:1; padding:16px 12px; border-radius:16px; border:none;
+      background:var(--bg); box-shadow:var(--neu-sm); cursor:pointer; text-align:center;
+      transition:all 0.2s; display:flex; flex-direction:column; align-items:center; gap:8px;
     }
-    .ob-hint { font-size: 10px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4; }
+    .ob-oc:hover{box-shadow:var(--neu-xs)}.ob-oc.sel{box-shadow:var(--neu-in)}
+    .ob-oc .ic{font-size:28px}.ob-oc .lb{font-size:11px;font-weight:600;color:var(--text)}
+    .nb { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:10px; background:var(--bg); box-shadow:var(--neu-xs); font-size:11px; color:var(--text-sec); margin-bottom:16px; }
+    .nb .dt { width:7px; height:7px; border-radius:50%; }
+    .nb .dt.on{background:#22c55e}.nb .dt.off{background:#ef4444}
 
-    /* Radio-like option cards */
-    .ob-option-grid { display: flex; gap: 12px; margin-bottom: 18px; }
-    .ob-option-card {
-      flex: 1; padding: 16px 12px; border-radius: 16px; border: none;
-      background: var(--bg); box-shadow: var(--neu-sm);
-      cursor: pointer; text-align: center; transition: all 0.2s;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    /* ── Widget ── */
+    .wg { width:100%; max-width:380px; border-radius:28px; padding:24px 20px 20px; background:var(--bg); box-shadow:var(--neu); position:relative; transition:all 0.3s; }
+    .w-top { display:flex; align-items:flex-start; justify-content:center; margin-bottom:18px; position:relative; }
+    .w-cw { position:relative; width:160px; height:160px; }
+    .w-svg { position:absolute; inset:0; width:100%; height:100%; }
+    .w-bgr { fill:none; stroke:rgba(168,197,160,0.15); }
+    .w-pr { fill:none; stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
+    .w-ci {
+      position:absolute; left:12px; top:12px; width:136px; height:136px;
+      border-radius:50%; background:var(--bg); box-shadow:var(--neu);
+      display:flex; align-items:center; justify-content:center; flex-direction:column;
     }
-    .ob-option-card:hover { box-shadow: var(--neu-xs); }
-    .ob-option-card.selected { box-shadow: var(--neu-inset); }
-    .ob-option-card .icon { font-size: 28px; }
-    .ob-option-card .label { font-size: 11px; font-weight: 600; color: var(--text); }
+    .w-tm { font-size:2rem; font-weight:600; color:var(--text); letter-spacing:-0.03em; }
+    .w-dt { font-size:9px; color:var(--text-muted); margin-top:2px; font-weight:500; }
+    .w-af { position:relative; width:100px; height:100px; }
+    .w-af .mk { position:absolute; width:2px; background:var(--text-muted); left:50%; transform-origin:bottom center; }
+    .w-hd { position:absolute; bottom:50%; left:50%; transform-origin:bottom center; border-radius:2px; }
+    .w-hh { width:3px; height:28px; background:var(--text); }
+    .w-hm { width:2px; height:38px; background:var(--text); }
+    .w-hs { width:1px; height:42px; background:var(--accent); }
+    .w-hc { position:absolute; width:6px; height:6px; border-radius:50%; background:var(--accent); top:50%; left:50%; transform:translate(-50%,-50%); }
+    .w-wb {
+      position:absolute; right:-8px; bottom:-4px; width:44px; height:44px;
+      border-radius:12px; border:none; background:var(--bg); box-shadow:var(--neu-sm);
+      display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; transition:box-shadow 0.2s;
+    }
+    .w-wb:active{box-shadow:var(--neu-in)}
+    .w-wt { display:none; position:absolute; right:0; top:48px; z-index:10; background:var(--bg); border-radius:14px; box-shadow:var(--neu); padding:14px 16px; min-width:180px; font-size:12px; color:var(--text); }
+    .w-wt.show{display:block}
+    .w-wt .tp{font-size:22px;font-weight:700}.w-wt .dl{color:var(--text-sec);margin-top:4px;line-height:1.5}
+    .w-mr { display:flex; justify-content:center; gap:14px; margin-bottom:20px; }
+    .w-mb {
+      width:42px; height:42px; border-radius:50%; border:none;
+      background:var(--bg); box-shadow:var(--neu-xs);
+      display:flex; align-items:center; justify-content:center;
+      font-size:17px; cursor:pointer; transition:all 0.2s; color:var(--text-muted);
+    }
+    .w-mb.act { background:var(--accent); color:#fff; box-shadow:0 2px 8px rgba(168,197,160,0.5); }
+    .w-tg { display:flex; flex-direction:column; gap:12px; }
+    .w-tr {
+      display:flex; align-items:center; background:var(--bg); border-radius:16px;
+      padding:12px 16px; box-shadow:var(--neu-sm); cursor:pointer; transition:box-shadow 0.2s;
+    }
+    .w-tr:active{box-shadow:var(--neu-xs)}
+    .w-tl { flex:1; font-size:13px; font-weight:600; color:var(--text); }
+    .w-tt { width:42px; height:22px; border-radius:999px; background:var(--bg); box-shadow:var(--neu-in); position:relative; transition:background 0.3s; flex-shrink:0; }
+    .w-tt.on{background:var(--accent)}
+    .w-th { position:absolute; top:2px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:var(--neu-xs); transition:left 0.25s; }
+    .w-th.off{left:3px}.w-th.on{left:21px}
+    .w-rf {
+      position:absolute; top:12px; right:14px; width:28px; height:28px; border-radius:8px; border:none;
+      background:var(--bg); box-shadow:var(--neu-xs);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-size:13px; color:var(--text-muted); transition:all 0.2s;
+    }
+    .w-rf:hover{color:var(--accent)}.w-rf:active{box-shadow:var(--neu-in)}
+    .w-rf.spin svg{animation:spin 0.6s ease}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-    /* ═══════════════════════════════════════════
-       Widget
-       ═══════════════════════════════════════════ */
-    .widget {
-      width: 100%; max-width: 380px;
-      border-radius: 28px;
-      padding: 24px 20px 20px;
-      background: var(--bg);
-      box-shadow: var(--neu-shadow);
-      position: relative;
-      transition: all 0.3s;
+    /* Generate month button */
+    .w-gen {
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      margin-top:14px; padding:8px 14px; border-radius:12px; border:none;
+      background:var(--bg); box-shadow:var(--neu-xs);
+      font-size:11px; font-weight:600; color:var(--text-sec);
+      cursor:pointer; transition:all 0.2s; width:100%;
     }
+    .w-gen:hover{color:var(--accent)}.w-gen:active{box-shadow:var(--neu-in)}
+    .w-gen svg{width:14px;height:14px}
+    .w-gen.loading{pointer-events:none;opacity:0.6}
 
-    /* Top row: clock + weather */
-    .w-top { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: 18px; position: relative; }
+    .w-sl { font-size:11px; color:var(--text-muted); cursor:pointer; text-decoration:underline; margin-top:4px; text-align:center; }
+    .w-sl:hover{color:var(--text-sec)}
 
-    /* Clock container */
-    .w-clock-wrap { position: relative; width: 160px; height: 160px; }
-    .w-clock-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .w-clock-bg-ring { fill: none; stroke: rgba(168,197,160,0.15); }
-    .w-clock-progress { fill: none; stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
-    .w-clock-inner {
-      position: absolute; left: 12px; top: 12px;
-      width: 136px; height: 136px;
-      border-radius: 50%;
-      background: var(--bg);
-      box-shadow: var(--neu-shadow);
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column;
+    /* Embed URL box */
+    .embed-box {
+      width:100%; padding:10px 14px; border-radius:12px;
+      background:var(--bg); box-shadow:var(--neu-in);
+      font-size:10px; color:var(--text-sec); word-break:break-all;
+      margin-top:8px; line-height:1.4; cursor:pointer;
     }
-    .w-time { font-size: 2rem; font-weight: 600; color: var(--text); letter-spacing: -0.03em; }
-    .w-date-small { font-size: 9px; color: var(--text-muted); margin-top: 2px; font-weight: 500; }
+    .embed-box:hover { color:var(--text); }
 
-    /* Analog clock */
-    .w-analog-face { position: relative; width: 100px; height: 100px; }
-    .w-analog-face .marker {
-      position: absolute; width: 2px; background: var(--text-muted);
-      left: 50%; transform-origin: bottom center;
+    /* ── Modal ── */
+    .mo { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); backdrop-filter:blur(4px); z-index:100; align-items:center; justify-content:center; }
+    .mo.show{display:flex}
+    .mo-b { width:90%; max-width:380px; background:var(--bg); border-radius:20px; box-shadow:var(--neu); padding:24px; max-height:85vh; overflow-y:auto; }
+    .mo-b h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px}
+    .mo-b p{font-size:11px;color:var(--text-sec);margin-bottom:16px}
+    .mo-ta {
+      width:100%; min-height:120px; padding:12px; border-radius:12px; border:none;
+      background:var(--bg); color:var(--text); font-size:13px; font-family:inherit;
+      box-shadow:var(--neu-in); resize:vertical; outline:none; line-height:1.6;
     }
-    .w-hand {
-      position: absolute; bottom: 50%; left: 50%;
-      transform-origin: bottom center; border-radius: 2px;
-    }
-    .w-hand-hour { width: 3px; height: 28px; background: var(--text); }
-    .w-hand-minute { width: 2px; height: 38px; background: var(--text); }
-    .w-hand-second { width: 1px; height: 42px; background: var(--accent); }
-    .w-hand-center { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+    .mo-ta:focus{box-shadow:inset 3px 3px 6px rgba(163,177,198,0.55),inset -3px -3px 6px rgba(255,255,255,0.65)}
+    .mo-ac { display:flex; gap:10px; margin-top:16px; }
+    .mo-ac .ob-btn{flex:1}
 
-    /* Weather button */
-    .w-weather-btn {
-      position: absolute; right: -8px; bottom: -4px;
-      width: 44px; height: 44px;
-      border-radius: 12px; border: none;
-      background: var(--bg);
-      box-shadow: var(--neu-sm);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; cursor: pointer;
-      transition: box-shadow 0.2s;
-    }
-    .w-weather-btn:active { box-shadow: var(--neu-inset); }
-
-    /* Weather tooltip */
-    .w-weather-tooltip {
-      display: none; position: absolute;
-      right: 0; top: 48px; z-index: 10;
-      background: var(--bg); border-radius: 14px;
-      box-shadow: var(--neu-shadow);
-      padding: 14px 16px; min-width: 180px;
-      font-size: 12px; color: var(--text);
-    }
-    .w-weather-tooltip.show { display: block; }
-    .w-weather-tooltip .temp { font-size: 22px; font-weight: 700; }
-    .w-weather-tooltip .detail { color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
-
-    /* Mood icons row */
-    .w-moods { display: flex; justify-content: center; gap: 14px; margin-bottom: 20px; }
-    .w-mood-btn {
-      width: 42px; height: 42px; border-radius: 50%; border: none;
-      background: var(--bg); box-shadow: var(--neu-xs);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px; cursor: pointer; transition: all 0.2s;
-      color: var(--text-muted);
-    }
-    .w-mood-btn.active {
-      background: var(--accent); color: #fff;
-      box-shadow: 0 2px 8px rgba(168,197,160,0.5);
-    }
-
-    /* Toggle rows */
-    .w-toggles { display: flex; flex-direction: column; gap: 12px; }
-    .w-toggle-row {
-      display: flex; align-items: center;
-      background: var(--bg); border-radius: 16px;
-      padding: 12px 16px;
-      box-shadow: var(--neu-sm);
-      cursor: pointer; transition: box-shadow 0.2s;
-    }
-    .w-toggle-row:active { box-shadow: var(--neu-xs); }
-    .w-toggle-label { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
-    .w-toggle-track {
-      width: 42px; height: 22px; border-radius: 999px;
-      background: var(--bg); box-shadow: var(--neu-inset);
-      position: relative; transition: background 0.3s;
-      flex-shrink: 0;
-    }
-    .w-toggle-track.on { background: var(--accent); }
-    .w-toggle-thumb {
-      position: absolute; top: 2px;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: #fff; box-shadow: var(--neu-xs);
-      transition: left 0.25s;
-    }
-    .w-toggle-thumb.off { left: 3px; }
-    .w-toggle-thumb.on { left: 21px; }
-
-    /* Refresh button */
-    .w-refresh {
-      position: absolute; top: 12px; right: 14px;
-      width: 28px; height: 28px; border-radius: 8px; border: none;
-      background: var(--bg); box-shadow: var(--neu-xs);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 13px; color: var(--text-muted);
-      transition: all 0.2s;
-    }
-    .w-refresh:hover { color: var(--accent); }
-    .w-refresh:active { box-shadow: var(--neu-inset); }
-    .w-refresh.spinning svg { animation: spin 0.6s ease; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    /* Settings link */
-    .w-settings-link {
-      font-size: 11px; color: var(--text-muted);
-      cursor: pointer; text-decoration: underline;
-      margin-top: 4px; text-align: center;
-    }
-    .w-settings-link:hover { color: var(--text-secondary); }
-
-    /* ═══════════════════════════════════════════
-       Modal Overlay
-       ═══════════════════════════════════════════ */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
-      z-index: 100; align-items: center; justify-content: center;
-    }
-    .modal-overlay.show { display: flex; }
-    .modal-box {
-      width: 90%; max-width: 380px;
-      background: var(--bg); border-radius: 20px;
-      box-shadow: var(--neu-shadow); padding: 24px;
-      max-height: 85vh; overflow-y: auto;
-    }
-    .modal-box h3 { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
-    .modal-box p { font-size: 11px; color: var(--text-secondary); margin-bottom: 16px; }
-    .modal-textarea {
-      width: 100%; min-height: 120px; padding: 12px;
-      border-radius: 12px; border: none;
-      background: var(--bg); color: var(--text);
-      font-size: 13px; font-family: inherit;
-      box-shadow: var(--neu-inset); resize: vertical;
-      outline: none; line-height: 1.6;
-    }
-    .modal-textarea:focus {
-      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
-    }
-    .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .modal-actions .ob-btn { flex: 1; }
-
-    /* Notion status badge */
-    .notion-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px; border-radius: 10px;
-      background: var(--bg); box-shadow: var(--neu-xs);
-      font-size: 11px; color: var(--text-secondary);
-      margin-bottom: 16px;
-    }
-    .notion-badge .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-    }
-    .notion-badge .dot.connected { background: #22c55e; }
-    .notion-badge .dot.disconnected { background: #ef4444; }
-
-    /* ═══════════════════════════════════════════
-       Responsive
-       ═══════════════════════════════════════════ */
-    @media (max-width: 440px) {
-      #app { padding: 12px; }
-      .widget { max-width: 100%; padding: 20px 16px 16px; }
-      .ob-window { max-width: 100%; }
-    }
+    @media(max-width:440px){ #app{padding:12px} .wg{max-width:100%;padding:20px 16px 16px} .ob-win{max-width:100%} }
   </style>
 </head>
 <body>
   <div id="app"></div>
 
   <!-- Morning Page Modal -->
-  <div class="modal-overlay" id="morningPageModal">
-    <div class="modal-box">
+  <div class="mo" id="mpModal">
+    <div class="mo-b">
       <h3>Morning Page</h3>
       <p>오늘의 생각과 감정을 자유롭게 적어보세요.</p>
-      <label class="ob-label">오늘의 기분</label>
-      <div class="ob-option-grid" id="moodSelect" style="margin-bottom:14px">
-        <button type="button" class="ob-option-card mood-card" data-mood="😊 좋음"><span class="icon">😊</span><span class="label">좋음</span></button>
-        <button type="button" class="ob-option-card mood-card" data-mood="😐 보통"><span class="icon">😐</span><span class="label">보통</span></button>
-        <button type="button" class="ob-option-card mood-card" data-mood="😔 나쁨"><span class="icon">😔</span><span class="label">나쁨</span></button>
-        <button type="button" class="ob-option-card mood-card" data-mood="🔥 열정"><span class="icon">🔥</span><span class="label">열정</span></button>
+      <label class="ob-lbl">오늘의 기분</label>
+      <div class="ob-og" id="moodSel" style="margin-bottom:14px">
+        <button type="button" class="ob-oc mood-c" data-mood="😊 좋음"><span class="ic">😊</span><span class="lb">좋음</span></button>
+        <button type="button" class="ob-oc mood-c" data-mood="😐 보통"><span class="ic">😐</span><span class="lb">보통</span></button>
+        <button type="button" class="ob-oc mood-c" data-mood="😔 나쁨"><span class="ic">😔</span><span class="lb">나쁨</span></button>
+        <button type="button" class="ob-oc mood-c" data-mood="🔥 열정"><span class="ic">🔥</span><span class="lb">열정</span></button>
       </div>
-      <label class="ob-label">모닝페이지</label>
-      <textarea class="modal-textarea" id="morningPageText" placeholder="마음 가는 대로 써보세요..."></textarea>
-      <div class="modal-actions">
-        <button type="button" class="ob-btn ob-btn-secondary" id="mpCancel">취소</button>
+      <label class="ob-lbl">모닝페이지</label>
+      <textarea class="mo-ta" id="mpText" placeholder="마음 가는 대로 써보세요..."></textarea>
+      <div class="mo-ac">
+        <button type="button" class="ob-btn ob-btn2" id="mpCancel">취소</button>
         <button type="button" class="ob-btn" id="mpSave" style="background:var(--accent)">저장</button>
       </div>
     </div>
   </div>
 
   <!-- Gratitude Diary Modal -->
-  <div class="modal-overlay" id="gratitudeModal">
-    <div class="modal-box">
+  <div class="mo" id="gdModal">
+    <div class="mo-b">
       <h3>감사일기</h3>
       <p>오늘 감사한 세 가지를 적어보세요.</p>
-      <label class="ob-label">감사한 것 1</label>
-      <textarea class="modal-textarea" id="grat1" style="min-height:60px" placeholder="첫 번째 감사..."></textarea>
-      <label class="ob-label" style="margin-top:10px">감사한 것 2</label>
-      <textarea class="modal-textarea" id="grat2" style="min-height:60px" placeholder="두 번째 감사..."></textarea>
-      <label class="ob-label" style="margin-top:10px">감사한 것 3</label>
-      <textarea class="modal-textarea" id="grat3" style="min-height:60px" placeholder="세 번째 감사..."></textarea>
-      <div class="modal-actions">
-        <button type="button" class="ob-btn ob-btn-secondary" id="gratCancel">취소</button>
-        <button type="button" class="ob-btn" id="gratSave" style="background:var(--accent)">저장</button>
+      <label class="ob-lbl">감사한 것 1</label>
+      <textarea class="mo-ta" id="g1" style="min-height:60px" placeholder="첫 번째 감사..."></textarea>
+      <label class="ob-lbl" style="margin-top:10px">감사한 것 2</label>
+      <textarea class="mo-ta" id="g2" style="min-height:60px" placeholder="두 번째 감사..."></textarea>
+      <label class="ob-lbl" style="margin-top:10px">감사한 것 3</label>
+      <textarea class="mo-ta" id="g3" style="min-height:60px" placeholder="세 번째 감사..."></textarea>
+      <div class="mo-ac">
+        <button type="button" class="ob-btn ob-btn2" id="gdCancel">취소</button>
+        <button type="button" class="ob-btn" id="gdSave" style="background:var(--accent)">저장</button>
       </div>
     </div>
   </div>
 
 <script>
-// ═══════════════════════════════════════════
-// State Management
-// ═══════════════════════════════════════════
-const STORAGE_KEY = 'ritual-tracker-config';
-
+// ═══════════════════════════════════════════════
+// Config stored in URL hash (persists in Notion embed)
+// ═══════════════════════════════════════════════
 const CITIES = {
-  'KR': { name: '대한민국', cities: { 'Seoul': { label: '서울', tz: 'Asia/Seoul' }, 'Busan': { label: '부산', tz: 'Asia/Seoul' }, 'Incheon': { label: '인천', tz: 'Asia/Seoul' }, 'Daegu': { label: '대구', tz: 'Asia/Seoul' }, 'Jeju': { label: '제주', tz: 'Asia/Seoul' } } },
-  'JP': { name: '일본', cities: { 'Tokyo': { label: '도쿄', tz: 'Asia/Tokyo' }, 'Osaka': { label: '오사카', tz: 'Asia/Tokyo' }, 'Kyoto': { label: '교토', tz: 'Asia/Tokyo' } } },
-  'US': { name: '미국', cities: { 'New York': { label: '뉴욕', tz: 'America/New_York' }, 'Los Angeles': { label: 'LA', tz: 'America/Los_Angeles' }, 'Chicago': { label: '시카고', tz: 'America/Chicago' }, 'Seattle': { label: '시애틀', tz: 'America/Los_Angeles' } } },
-  'GB': { name: '영국', cities: { 'London': { label: '런던', tz: 'Europe/London' } } },
-  'FR': { name: '프랑스', cities: { 'Paris': { label: '파리', tz: 'Europe/Paris' } } },
-  'DE': { name: '독일', cities: { 'Berlin': { label: '베를린', tz: 'Europe/Berlin' } } },
-  'CN': { name: '중국', cities: { 'Beijing': { label: '베이징', tz: 'Asia/Shanghai' }, 'Shanghai': { label: '상하이', tz: 'Asia/Shanghai' } } },
-  'TH': { name: '태국', cities: { 'Bangkok': { label: '방콕', tz: 'Asia/Bangkok' } } },
-  'VN': { name: '베트남', cities: { 'Ho Chi Minh': { label: '호치민', tz: 'Asia/Ho_Chi_Minh' }, 'Hanoi': { label: '하노이', tz: 'Asia/Bangkok' } } },
-  'AU': { name: '호주', cities: { 'Sydney': { label: '시드니', tz: 'Australia/Sydney' }, 'Melbourne': { label: '멜버른', tz: 'Australia/Melbourne' } } },
-  'SG': { name: '싱가포르', cities: { 'Singapore': { label: '싱가포르', tz: 'Asia/Singapore' } } },
+  'KR': { name:'대한민국', cities:{ 'Seoul':{l:'서울',tz:'Asia/Seoul'}, 'Busan':{l:'부산',tz:'Asia/Seoul'}, 'Incheon':{l:'인천',tz:'Asia/Seoul'}, 'Daegu':{l:'대구',tz:'Asia/Seoul'}, 'Jeju':{l:'제주',tz:'Asia/Seoul'} }},
+  'JP': { name:'일본', cities:{ 'Tokyo':{l:'도쿄',tz:'Asia/Tokyo'}, 'Osaka':{l:'오사카',tz:'Asia/Tokyo'} }},
+  'US': { name:'미국', cities:{ 'New York':{l:'뉴욕',tz:'America/New_York'}, 'Los Angeles':{l:'LA',tz:'America/Los_Angeles'}, 'Chicago':{l:'시카고',tz:'America/Chicago'} }},
+  'GB': { name:'영국', cities:{ 'London':{l:'런던',tz:'Europe/London'} }},
+  'FR': { name:'프랑스', cities:{ 'Paris':{l:'파리',tz:'Europe/Paris'} }},
+  'DE': { name:'독일', cities:{ 'Berlin':{l:'베를린',tz:'Europe/Berlin'} }},
+  'CN': { name:'중국', cities:{ 'Beijing':{l:'베이징',tz:'Asia/Shanghai'}, 'Shanghai':{l:'상하이',tz:'Asia/Shanghai'} }},
+  'TH': { name:'태국', cities:{ 'Bangkok':{l:'방콕',tz:'Asia/Bangkok'} }},
+  'VN': { name:'베트남', cities:{ 'Ho Chi Minh':{l:'호치민',tz:'Asia/Ho_Chi_Minh'} }},
+  'AU': { name:'호주', cities:{ 'Sydney':{l:'시드니',tz:'Australia/Sydney'} }},
+  'SG': { name:'싱가포르', cities:{ 'Singapore':{l:'싱가포르',tz:'Asia/Singapore'} }},
 };
 
-const DEFAULT_STATE = {
-  step: 0,           // onboarding step (0 = not started, 99 = done)
-  country: 'KR',
-  city: 'Seoul',
-  timezone: 'Asia/Seoul',
-  clockStyle: 'digital',  // 'digital' | 'analog'
-  bgColor: '#E8ECEF',
-  accentColor: '#a8c5a0',
-  textColor: '#3a4556',
-  notionConnected: false,
-  morningPageDbId: '',
-  gratitudeDbId: '',
-  parentPageId: '',
-  selectedMood: '',
+const DEF = {
+  s:0, co:'KR', ci:'Seoul', tz:'Asia/Seoul', cs:'digital',
+  bg:'#E8ECEF', ac:'#a8c5a0', tx:'#3a4556',
+  nc:false, cid:'', mpDb:'', gdDb:'', mood:''
 };
 
-function loadState() {
+// ── URL Hash Persistence ──
+function encodeHash(obj) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+}
+function decodeHash(str) {
+  try { return JSON.parse(decodeURIComponent(escape(atob(str)))); }
+  catch(_) { return null; }
+}
+function loadCfg() {
+  // Check URL hash first
+  const h = window.location.hash.replace(/^#c=/, '');
+  if (h) {
+    const decoded = decodeHash(h);
+    if (decoded) return { ...DEF, ...decoded };
+  }
+  // Fallback: localStorage (for initial setup before hash is set)
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_STATE, ...JSON.parse(raw) };
-  } catch (_) {}
-  return { ...DEFAULT_STATE };
+    const raw = localStorage.getItem('rt-cfg');
+    if (raw) return { ...DEF, ...JSON.parse(raw) };
+  } catch(_) {}
+  return { ...DEF };
+}
+function saveCfg(c) {
+  // Save to both URL hash and localStorage
+  const hash = 'c=' + encodeHash(c);
+  window.location.hash = hash;
+  try { localStorage.setItem('rt-cfg', JSON.stringify(c)); } catch(_) {}
+}
+function getEmbedUrl() {
+  return window.location.origin + window.location.pathname + '#' + window.location.hash.replace(/^#/, '');
 }
 
-function saveState(s) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (_) {}
+let C = loadCfg();
+
+// ── API helper (always sends configId) ──
+function api(url, opts = {}) {
+  const headers = { ...(opts.headers || {}) };
+  if (C.cid) headers['X-Config-Id'] = C.cid;
+  return fetch(url, { ...opts, headers });
+}
+function apiJson(url, body) {
+  return api(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 }
 
-let S = loadState();
-
-// ═══════════════════════════════════════════
-// Neumorphism Helpers
-// ═══════════════════════════════════════════
-function neuShadows(hex) {
-  hex = (hex || '#E8ECEF').replace('#', '');
-  if (hex.length !== 6) hex = 'E8ECEF';
-  const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16);
-  const d = `${Math.round(r*0.7)},${Math.round(g*0.7)},${Math.round(b*0.7)}`;
-  const l = `${Math.min(255,Math.round(r+(255-r)*0.5))},${Math.min(255,Math.round(g+(255-g)*0.5))},${Math.min(255,Math.round(b+(255-b)*0.5))}`;
+// ── Neumorphism ──
+function neuS(hex) {
+  hex = (hex||'#E8ECEF').replace('#','');
+  if (hex.length!==6) hex='E8ECEF';
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  const d=`${Math.round(r*.7)},${Math.round(g*.7)},${Math.round(b*.7)}`;
+  const l=`${Math.min(255,Math.round(r+(255-r)*.5))},${Math.min(255,Math.round(g+(255-g)*.5))},${Math.min(255,Math.round(b+(255-b)*.5))}`;
   return {
-    shadow: `9px 9px 16px rgba(${d},0.6), -9px -9px 16px rgba(${l},0.5)`,
-    sm: `5px 5px 10px rgba(${d},0.5), -5px -5px 10px rgba(${l},0.5)`,
-    xs: `3px 3px 6px rgba(${d},0.45), -3px -3px 6px rgba(${l},0.45)`,
-    inset: `inset 2px 2px 5px rgba(${d},0.4), inset -2px -2px 5px rgba(${l},0.5)`,
+    n:`9px 9px 16px rgba(${d},0.6),-9px -9px 16px rgba(${l},0.5)`,
+    sm:`5px 5px 10px rgba(${d},0.5),-5px -5px 10px rgba(${l},0.5)`,
+    xs:`3px 3px 6px rgba(${d},0.45),-3px -3px 6px rgba(${l},0.45)`,
+    in:`inset 2px 2px 5px rgba(${d},0.4),inset -2px -2px 5px rgba(${l},0.5)`,
   };
 }
-
-function contrastText(hex) {
-  hex = (hex || '#E8ECEF').replace('#', '');
-  if (hex.length !== 6) return '#1d1d1f';
-  const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16);
-  return (r*299 + g*587 + b*114) / 1000 >= 128 ? '#1d1d1f' : '#ffffff';
+function contTx(hex) {
+  hex=(hex||'#E8ECEF').replace('#','');
+  if(hex.length!==6)return'#1d1d1f';
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  return(r*299+g*587+b*114)/1000>=128?'#1d1d1f':'#ffffff';
 }
-
 function applyTheme() {
-  const n = neuShadows(S.bgColor);
-  const root = document.documentElement;
-  root.style.setProperty('--bg', S.bgColor);
-  root.style.setProperty('--accent', S.accentColor);
-  root.style.setProperty('--text', S.textColor);
-  root.style.setProperty('--neu-shadow', n.shadow);
-  root.style.setProperty('--neu-sm', n.sm);
-  root.style.setProperty('--neu-xs', n.xs);
-  root.style.setProperty('--neu-inset', n.inset);
-  document.body.style.background = S.bgColor;
+  const n=neuS(C.bg), root=document.documentElement;
+  root.style.setProperty('--bg',C.bg);
+  root.style.setProperty('--accent',C.ac);
+  root.style.setProperty('--text',C.tx);
+  root.style.setProperty('--text-sec', adjustColor(C.tx, 0.6));
+  root.style.setProperty('--text-muted', adjustColor(C.tx, 0.4));
+  root.style.setProperty('--neu',n.n);
+  root.style.setProperty('--neu-sm',n.sm);
+  root.style.setProperty('--neu-xs',n.xs);
+  root.style.setProperty('--neu-in',n.in);
+  document.body.style.background=C.bg;
+}
+function adjustColor(hex, opacity) {
+  hex=(hex||'#3a4556').replace('#','');
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  return `rgba(${r},${g},${b},${opacity})`;
 }
 
-// ═══════════════════════════════════════════
-// Time helpers
-// ═══════════════════════════════════════════
-function getNow() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: S.timezone }));
-}
+// ── Time ──
+function getNow() { return new Date(new Date().toLocaleString('en-US',{timeZone:C.tz})); }
+function fmtTime(d) { return d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}); }
+function fmtDate(d) { return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}); }
 
-function formatTime(d) {
-  return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-}
+// ═══════════════════════════════════════════════
+// Render
+// ═══════════════════════════════════════════════
+function render() { applyTheme(); C.s >= 4 ? renderWidget() : renderOB(); }
 
-function formatDate(d) {
-  return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' });
-}
-
-// ═══════════════════════════════════════════
-// Rendering
-// ═══════════════════════════════════════════
-function render() {
-  applyTheme();
-  if (S.step < 4) renderOnboarding();
-  else renderWidget();
-}
+let clockIv = null;
 
 // ── Onboarding ──
-function renderOnboarding() {
-  const app = document.getElementById('app');
-  const steps = [stepLocation, stepClock, stepNotion, stepColors];
-  const stepTitles = ['지역 설정', '시계 스타일', 'Notion 연동', '색상 설정'];
-
-  const dotsHtml = [0,1,2,3].map(i =>
-    `<span class="ob-step-dot ${i === S.step ? 'active' : i < S.step ? 'done' : ''}"></span>`
-  ).join('');
-
-  app.innerHTML = `
-    <div class="ob-window">
-      <div class="ob-titlebar">
-        <div class="ob-dots"><span class="ob-dot r"></span><span class="ob-dot y"></span><span class="ob-dot g"></span></div>
-        <div class="ob-title">${stepTitles[S.step]}</div>
+function renderOB() {
+  if(clockIv){clearInterval(clockIv);clockIv=null;}
+  const steps=[obLoc,obClk,obNotion,obColor];
+  const titles=['지역 설정','시계 스타일','Notion 연동','색상 설정'];
+  const dots=[0,1,2,3].map(i=>`<span class="ob-sd ${i===C.s?'act':i<C.s?'done':''}"></span>`).join('');
+  document.getElementById('app').innerHTML=`
+    <div class="ob-win">
+      <div class="ob-bar">
+        <div class="ob-dots"><span class="ob-d r"></span><span class="ob-d y"></span><span class="ob-d g"></span></div>
+        <div class="ob-t">${titles[C.s]}</div>
         <div style="flex:1"></div>
       </div>
       <div class="ob-body">
-        <div class="ob-steps">${dotsHtml}</div>
-        <div id="step-content"></div>
+        <div class="ob-steps">${dots}</div>
+        <div id="sc"></div>
       </div>
-    </div>
-  `;
-
-  steps[S.step]();
+    </div>`;
+  steps[C.s]();
 }
 
-function stepLocation() {
-  const el = document.getElementById('step-content');
-  const countryOptions = Object.entries(CITIES).map(([code, c]) =>
-    `<option value="${code}" ${code === S.country ? 'selected' : ''}>${c.name}</option>`
-  ).join('');
-
-  function cityOptions(countryCode) {
-    return Object.entries(CITIES[countryCode].cities).map(([city, info]) =>
-      `<option value="${city}" ${city === S.city ? 'selected' : ''}>${info.label} (${city})</option>`
-    ).join('');
-  }
-
-  el.innerHTML = `
+function obLoc() {
+  const el=document.getElementById('sc');
+  const coOpts=Object.entries(CITIES).map(([k,v])=>`<option value="${k}" ${k===C.co?'selected':''}>${v.name}</option>`).join('');
+  function ciOpts(co) { return Object.entries(CITIES[co].cities).map(([k,v])=>`<option value="${k}" ${k===C.ci?'selected':''}>${v.l} (${k})</option>`).join(''); }
+  el.innerHTML=`
     <h2>어디에 계신가요?</h2>
-    <p class="desc">날씨 정보와 시간대를 설정하기 위해 지역을 선택하세요.</p>
-    <label class="ob-label">국가</label>
-    <select class="ob-input ob-select" id="selCountry">${countryOptions}</select>
-    <label class="ob-label">도시</label>
-    <select class="ob-input ob-select" id="selCity">${cityOptions(S.country)}</select>
-    <button type="button" class="ob-btn" style="background:var(--accent);margin-top:8px" id="nextBtn">다음</button>
-  `;
-
-  document.getElementById('selCountry').onchange = function() {
-    S.country = this.value;
-    const firstCity = Object.keys(CITIES[S.country].cities)[0];
-    S.city = firstCity;
-    S.timezone = CITIES[S.country].cities[firstCity].tz;
-    saveState(S);
-    document.getElementById('selCity').innerHTML = cityOptions(S.country);
+    <p class="desc">날씨 정보와 시간대를 설정합니다.</p>
+    <label class="ob-lbl">국가</label>
+    <select class="ob-inp ob-sel" id="sCo">${coOpts}</select>
+    <label class="ob-lbl">도시</label>
+    <select class="ob-inp ob-sel" id="sCi">${ciOpts(C.co)}</select>
+    <button class="ob-btn" style="background:var(--accent);margin-top:8px" id="nxt">다음</button>`;
+  document.getElementById('sCo').onchange=function(){
+    C.co=this.value;
+    const fc=Object.keys(CITIES[C.co].cities)[0];
+    C.ci=fc; C.tz=CITIES[C.co].cities[fc].tz;
+    saveCfg(C); document.getElementById('sCi').innerHTML=ciOpts(C.co);
   };
-  document.getElementById('selCity').onchange = function() {
-    S.city = this.value;
-    S.timezone = CITIES[S.country].cities[S.city].tz;
-    saveState(S);
-  };
-  document.getElementById('nextBtn').onclick = function() {
-    S.step = 1; saveState(S); render();
-  };
+  document.getElementById('sCi').onchange=function(){ C.ci=this.value; C.tz=CITIES[C.co].cities[C.ci].tz; saveCfg(C); };
+  document.getElementById('nxt').onclick=()=>{C.s=1;saveCfg(C);render();};
 }
 
-function stepClock() {
-  const el = document.getElementById('step-content');
-  el.innerHTML = `
-    <h2>시계 스타일</h2>
-    <p class="desc">위젯에 표시할 시계 스타일을 선택하세요.</p>
-    <div class="ob-option-grid">
-      <button type="button" class="ob-option-card ${S.clockStyle === 'digital' ? 'selected' : ''}" data-style="digital">
-        <span class="icon" style="font-size:24px;font-weight:700;font-family:monospace">07:30</span>
-        <span class="label">디지털</span>
-      </button>
-      <button type="button" class="ob-option-card ${S.clockStyle === 'analog' ? 'selected' : ''}" data-style="analog">
-        <span class="icon">🕐</span>
-        <span class="label">아날로그</span>
-      </button>
+function obClk() {
+  const el=document.getElementById('sc');
+  el.innerHTML=`
+    <h2>시계 스타일</h2><p class="desc">위젯에 표시할 시계를 선택하세요.</p>
+    <div class="ob-og">
+      <button class="ob-oc ${C.cs==='digital'?'sel':''}" data-v="digital"><span class="ic" style="font-size:24px;font-weight:700;font-family:monospace">07:30</span><span class="lb">디지털</span></button>
+      <button class="ob-oc ${C.cs==='analog'?'sel':''}" data-v="analog"><span class="ic">🕐</span><span class="lb">아날로그</span></button>
     </div>
-    <button type="button" class="ob-btn" style="background:var(--accent)" id="nextBtn">다음</button>
-    <button type="button" class="ob-btn ob-btn-secondary" id="backBtn">이전</button>
-  `;
-
-  el.querySelectorAll('.ob-option-card').forEach(card => {
-    card.onclick = function() {
-      el.querySelectorAll('.ob-option-card').forEach(c => c.classList.remove('selected'));
-      this.classList.add('selected');
-      S.clockStyle = this.dataset.style;
-      saveState(S);
-    };
-  });
-  document.getElementById('nextBtn').onclick = () => { S.step = 2; saveState(S); render(); };
-  document.getElementById('backBtn').onclick = () => { S.step = 0; saveState(S); render(); };
+    <button class="ob-btn" style="background:var(--accent)" id="nxt">다음</button>
+    <button class="ob-btn ob-btn2" id="bk">이전</button>`;
+  el.querySelectorAll('.ob-oc').forEach(c=>{c.onclick=function(){el.querySelectorAll('.ob-oc').forEach(x=>x.classList.remove('sel'));this.classList.add('sel');C.cs=this.dataset.v;saveCfg(C);};});
+  document.getElementById('nxt').onclick=()=>{C.s=2;saveCfg(C);render();};
+  document.getElementById('bk').onclick=()=>{C.s=0;saveCfg(C);render();};
 }
 
-function stepNotion() {
-  const el = document.getElementById('step-content');
-
-  el.innerHTML = `
-    <h2>Notion 연동</h2>
-    <p class="desc">모닝페이지와 감사일기를 Notion 데이터베이스에 자동으로 저장합니다.</p>
-    <div id="notionStatus"></div>
-    <div id="notionActions"></div>
-    <button type="button" class="ob-btn" style="background:var(--accent);margin-top:12px" id="nextBtn">다음</button>
-    <button type="button" class="ob-btn ob-btn-secondary" id="backBtn">이전</button>
-  `;
-
-  document.getElementById('backBtn').onclick = () => { S.step = 1; saveState(S); render(); };
-  document.getElementById('nextBtn').onclick = () => { S.step = 3; saveState(S); render(); };
-
-  // Check auth status
-  checkNotionStatus();
+function obNotion() {
+  const el=document.getElementById('sc');
+  el.innerHTML=`
+    <h2>Notion 연동</h2><p class="desc">모닝페이지와 감사일기를 Notion DB에 저장합니다.</p>
+    <div id="ns"></div><div id="na"></div>
+    <button class="ob-btn" style="background:var(--accent);margin-top:12px" id="nxt">다음</button>
+    <button class="ob-btn ob-btn2" id="bk">이전</button>`;
+  document.getElementById('bk').onclick=()=>{C.s=1;saveCfg(C);render();};
+  document.getElementById('nxt').onclick=()=>{C.s=3;saveCfg(C);render();};
+  chkNotion();
 }
 
-async function checkNotionStatus() {
-  const statusEl = document.getElementById('notionStatus');
-  const actionsEl = document.getElementById('notionActions');
-  if (!statusEl || !actionsEl) return;
-
+async function chkNotion() {
+  const ns=document.getElementById('ns'), na=document.getElementById('na');
+  if(!ns||!na)return;
   try {
-    const res = await fetch('/api/auth/status');
-    const data = await res.json();
-
-    if (data.authenticated) {
-      S.notionConnected = true; saveState(S);
-      statusEl.innerHTML = `
-        <div class="notion-badge">
-          <span class="dot connected"></span>
-          <span>${data.workspaceName || 'Notion'} 연결됨</span>
-        </div>
-      `;
-      actionsEl.innerHTML = `
-        <p class="ob-hint">데이터베이스를 자동 생성하거나 기존 데이터베이스를 사용할 수 있습니다.</p>
-        <button type="button" class="ob-btn" style="background:var(--accent)" id="setupDbBtn">데이터베이스 자동 생성</button>
-        <button type="button" class="ob-btn ob-btn-secondary" id="disconnectBtn">연결 해제</button>
-      `;
-
-      document.getElementById('setupDbBtn').onclick = setupDatabases;
-      document.getElementById('disconnectBtn').onclick = async () => {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        S.notionConnected = false; S.morningPageDbId = ''; S.gratitudeDbId = '';
-        saveState(S); render();
-      };
-
-      if (S.morningPageDbId && S.gratitudeDbId) {
-        actionsEl.innerHTML = `
-          <div class="notion-badge"><span class="dot connected"></span><span>데이터베이스 설정 완료</span></div>
-          <button type="button" class="ob-btn ob-btn-secondary" id="disconnectBtn">연결 해제</button>
-        `;
-        document.getElementById('disconnectBtn').onclick = async () => {
-          await fetch('/api/auth/logout', { method: 'POST' });
-          S.notionConnected = false; S.morningPageDbId = ''; S.gratitudeDbId = '';
-          saveState(S); render();
-        };
+    const r=await api('/api/auth/status'+(C.cid?'?configId='+C.cid:''));
+    const d=await r.json();
+    if(d.authenticated) {
+      C.nc=true; C.cid=d.configId||C.cid; saveCfg(C);
+      ns.innerHTML=`<div class="nb"><span class="dt on"></span><span>${d.workspaceName||'Notion'} 연결됨</span></div>`;
+      if(C.mpDb&&C.gdDb) {
+        na.innerHTML=`<div class="nb"><span class="dt on"></span><span>DB 설정 완료</span></div>
+          <button class="ob-btn ob-btn2" id="dcBtn">연결 해제</button>`;
+        document.getElementById('dcBtn').onclick=doDisconnect;
+      } else {
+        na.innerHTML=`<p class="ob-hint">DB를 자동 생성하거나, 기존 DB를 선택하세요.</p>
+          <button class="ob-btn" style="background:var(--accent)" id="setupBtn">DB 자동 생성</button>
+          <button class="ob-btn ob-btn2" id="dcBtn">연결 해제</button>`;
+        document.getElementById('setupBtn').onclick=doSetupDb;
+        document.getElementById('dcBtn').onclick=doDisconnect;
       }
     } else {
-      S.notionConnected = false; saveState(S);
-      statusEl.innerHTML = `
-        <div class="notion-badge">
-          <span class="dot disconnected"></span>
-          <span>Notion 미연결</span>
-        </div>
-      `;
-      actionsEl.innerHTML = `
-        <p class="ob-hint">Notion과 연결하면 모닝페이지, 감사일기가 자동으로 데이터베이스에 저장됩니다. 나중에 설정할 수도 있어요.</p>
-        <a href="/auth/notion" class="ob-btn" style="background:var(--accent);display:block;text-align:center;text-decoration:none;color:#fff;padding:12px;border-radius:12px">Notion 연결하기</a>
-      `;
+      C.nc=false; saveCfg(C);
+      ns.innerHTML=`<div class="nb"><span class="dt off"></span><span>Notion 미연결</span></div>`;
+      na.innerHTML=`<p class="ob-hint">연결하면 일기가 Notion DB에 자동 저장됩니다. 나중에 설정할 수도 있어요.</p>
+        <a href="/auth/notion" class="ob-btn" style="background:var(--accent);display:block;text-align:center;text-decoration:none;color:#fff;padding:12px;border-radius:12px">Notion 연결하기</a>`;
     }
-  } catch (err) {
-    statusEl.innerHTML = `
-      <div class="notion-badge">
-        <span class="dot disconnected"></span>
-        <span>서버 연결 불가 (로컬 모드)</span>
-      </div>
-    `;
-    actionsEl.innerHTML = `
-      <p class="ob-hint">서버가 실행 중이지 않습니다. Notion 연동 없이 로컬 모드로 사용할 수 있습니다.</p>
-    `;
+  } catch(e) {
+    ns.innerHTML=`<div class="nb"><span class="dt off"></span><span>서버 연결 불가 (로컬 모드)</span></div>`;
+    na.innerHTML=`<p class="ob-hint">서버 미실행. 로컬 모드로 사용 가능합니다.</p>`;
   }
 }
 
-async function setupDatabases() {
-  const actionsEl = document.getElementById('notionActions');
-  if (!actionsEl) return;
+async function doDisconnect() {
+  await api('/api/auth/logout',{method:'POST',headers:{'X-Config-Id':C.cid}});
+  C.nc=false;C.cid='';C.mpDb='';C.gdDb='';saveCfg(C);render();
+}
 
+async function doSetupDb() {
+  const na=document.getElementById('na');
   try {
-    // First get pages
-    const pagesRes = await fetch('/api/pages');
-    const pagesData = await pagesRes.json();
-
-    if (!pagesData.pages || pagesData.pages.length === 0) {
-      actionsEl.innerHTML = `<p class="ob-hint" style="color:#ef4444">접근 가능한 페이지가 없습니다. Notion에서 페이지를 공유해주세요.</p>`;
-      return;
-    }
-
-    const options = pagesData.pages.map(p =>
-      `<option value="${p.id}">${p.title}</option>`
-    ).join('');
-
-    actionsEl.innerHTML = `
-      <label class="ob-label">데이터베이스를 생성할 페이지 선택</label>
-      <select class="ob-input ob-select" id="parentPage">${options}</select>
-      <button type="button" class="ob-btn" style="background:var(--accent)" id="createDbBtn">생성하기</button>
-    `;
-
-    document.getElementById('createDbBtn').onclick = async () => {
-      const parentPageId = document.getElementById('parentPage').value;
-      actionsEl.innerHTML = `<p class="ob-hint">데이터베이스 생성 중...</p>`;
-
-      const res = await fetch('/api/databases/setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parentPageId })
-      });
-      const data = await res.json();
-
-      if (data.morningPageDbId && data.gratitudeDbId) {
-        S.morningPageDbId = data.morningPageDbId;
-        S.gratitudeDbId = data.gratitudeDbId;
-        S.parentPageId = parentPageId;
-        saveState(S);
-        actionsEl.innerHTML = `
-          <div class="notion-badge"><span class="dot connected"></span><span>데이터베이스 생성 완료!</span></div>
-        `;
-      } else {
-        actionsEl.innerHTML = `<p class="ob-hint" style="color:#ef4444">생성 실패: ${data.error || '알 수 없는 오류'}</p>`;
-      }
+    const pr=await api('/api/pages');
+    const pd=await pr.json();
+    if(!pd.pages||!pd.pages.length){na.innerHTML=`<p class="ob-hint" style="color:#ef4444">접근 가능한 페이지가 없습니다.</p>`;return;}
+    const opts=pd.pages.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+    na.innerHTML=`<label class="ob-lbl">DB 생성 위치 선택</label>
+      <select class="ob-inp ob-sel" id="ppSel">${opts}</select>
+      <button class="ob-btn" style="background:var(--accent)" id="crBtn">생성하기</button>`;
+    document.getElementById('crBtn').onclick=async()=>{
+      const pid=document.getElementById('ppSel').value;
+      na.innerHTML=`<p class="ob-hint">DB 생성 중...</p>`;
+      const r=await apiJson('/api/databases/setup',{parentPageId:pid});
+      const d=await r.json();
+      if(d.morningPageDbId&&d.gratitudeDbId){
+        C.mpDb=d.morningPageDbId;C.gdDb=d.gratitudeDbId;saveCfg(C);
+        na.innerHTML=`<div class="nb"><span class="dt on"></span><span>DB 생성 완료!</span></div>`;
+      } else { na.innerHTML=`<p class="ob-hint" style="color:#ef4444">실패: ${d.error||''}</p>`; }
     };
-  } catch (err) {
-    actionsEl.innerHTML = `<p class="ob-hint" style="color:#ef4444">오류가 발생했습니다.</p>`;
-  }
+  } catch(e) { na.innerHTML=`<p class="ob-hint" style="color:#ef4444">오류 발생</p>`; }
 }
 
-function stepColors() {
-  const el = document.getElementById('step-content');
-  const suggested = contrastText(S.bgColor);
-
-  el.innerHTML = `
-    <h2>색상 설정</h2>
-    <p class="desc">위젯의 배경, 강조, 텍스트 색상을 설정하세요.</p>
-
-    <label class="ob-label">배경색</label>
-    <div class="ob-color-row">
-      <input type="color" id="bgPick" value="${S.bgColor}">
-      <input type="text" class="ob-input" id="bgHex" value="${S.bgColor}" style="margin-bottom:0">
-    </div>
-    <p class="ob-hint">뉴모피즘 그림자가 이 색에서 자동 계산됩니다.</p>
-
-    <label class="ob-label">강조색</label>
-    <div class="ob-color-row">
-      <input type="color" id="accentPick" value="${S.accentColor}">
-      <input type="text" class="ob-input" id="accentHex" value="${S.accentColor}" style="margin-bottom:0">
-    </div>
-
-    <label class="ob-label">텍스트 색상</label>
-    <div class="ob-color-row">
-      <input type="color" id="textPick" value="${S.textColor}">
-      <input type="text" class="ob-input" id="textHex" value="${S.textColor}" style="margin-bottom:0">
-    </div>
-    <button type="button" class="ob-input" id="autoText" style="cursor:pointer;text-align:left;margin-bottom:14px">자동 제안: ${suggested}</button>
-
-    <button type="button" class="ob-btn" style="background:var(--accent)" id="finishBtn">위젯 시작하기</button>
-    <button type="button" class="ob-btn ob-btn-secondary" id="backBtn">이전</button>
-  `;
-
-  function syncColor(pickId, hexId, key) {
-    document.getElementById(pickId).oninput = function() {
-      S[key] = this.value; document.getElementById(hexId).value = this.value;
-      saveState(S); applyTheme();
-    };
-    document.getElementById(hexId).oninput = function() {
-      if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
-        S[key] = this.value; document.getElementById(pickId).value = this.value;
-        saveState(S); applyTheme();
-      }
-    };
+function obColor() {
+  const el=document.getElementById('sc');
+  const sug=contTx(C.bg);
+  el.innerHTML=`
+    <h2>색상 설정</h2><p class="desc">배경, 강조, 텍스트 색상을 설정하세요.</p>
+    <label class="ob-lbl">배경색</label>
+    <div class="ob-cr"><input type="color" id="bPk" value="${C.bg}"><input type="text" class="ob-inp" id="bHx" value="${C.bg}" style="margin-bottom:0"></div>
+    <p class="ob-hint">뉴모피즘 그림자가 자동 계산됩니다.</p>
+    <label class="ob-lbl">강조색</label>
+    <div class="ob-cr"><input type="color" id="aPk" value="${C.ac}"><input type="text" class="ob-inp" id="aHx" value="${C.ac}" style="margin-bottom:0"></div>
+    <label class="ob-lbl">텍스트 색상</label>
+    <div class="ob-cr"><input type="color" id="tPk" value="${C.tx}"><input type="text" class="ob-inp" id="tHx" value="${C.tx}" style="margin-bottom:0"></div>
+    <button class="ob-inp" id="autoT" style="cursor:pointer;text-align:left;margin-bottom:14px">자동 제안: ${sug}</button>
+    <button class="ob-btn" style="background:var(--accent)" id="fin">위젯 시작하기</button>
+    <button class="ob-btn ob-btn2" id="bk">이전</button>`;
+  function sync(pk,hx,key){
+    document.getElementById(pk).oninput=function(){C[key]=this.value;document.getElementById(hx).value=this.value;saveCfg(C);applyTheme();};
+    document.getElementById(hx).oninput=function(){if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){C[key]=this.value;document.getElementById(pk).value=this.value;saveCfg(C);applyTheme();}};
   }
-  syncColor('bgPick', 'bgHex', 'bgColor');
-  syncColor('accentPick', 'accentHex', 'accentColor');
-  syncColor('textPick', 'textHex', 'textColor');
-
-  document.getElementById('autoText').onclick = function() {
-    const s = contrastText(S.bgColor);
-    S.textColor = s; saveState(S); applyTheme();
-    document.getElementById('textPick').value = s;
-    document.getElementById('textHex').value = s;
-    this.textContent = '자동 제안: ' + s;
-  };
-  document.getElementById('finishBtn').onclick = () => { S.step = 99; saveState(S); render(); };
-  document.getElementById('backBtn').onclick = () => { S.step = 2; saveState(S); render(); };
+  sync('bPk','bHx','bg'); sync('aPk','aHx','ac'); sync('tPk','tHx','tx');
+  document.getElementById('autoT').onclick=function(){const s=contTx(C.bg);C.tx=s;saveCfg(C);applyTheme();document.getElementById('tPk').value=s;document.getElementById('tHx').value=s;this.textContent='자동 제안: '+s;};
+  document.getElementById('fin').onclick=()=>{C.s=99;saveCfg(C);render();};
+  document.getElementById('bk').onclick=()=>{C.s=2;saveCfg(C);render();};
 }
 
-// ── Widget ──
-let clockInterval = null;
-let weatherData = null;
+// ═══════════════════════════════════════════════
+// Widget
+// ═══════════════════════════════════════════════
+let todayPageIds = { mp: null, gd: null };
 
 function renderWidget() {
-  if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
-  const app = document.getElementById('app');
-  const now = getNow();
-
-  app.innerHTML = `
-    <div class="widget" id="widgetRoot">
-      <button type="button" class="w-refresh" id="refreshBtn" title="새로고침">
+  if(clockIv){clearInterval(clockIv);clockIv=null;}
+  const app=document.getElementById('app');
+  app.innerHTML=`
+    <div class="wg" id="wRoot">
+      <button class="w-rf" id="rfBtn" title="새로고침">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
       </button>
-
-      <div class="w-top">
-        <div class="w-clock-wrap" id="clockArea"></div>
+      <div class="w-top"><div class="w-cw" id="clkA"></div></div>
+      <div class="w-mr" id="moodR"></div>
+      <div class="w-tg">
+        <div class="w-tr" id="tgMP"><span class="w-tl">Morning Page</span><div class="w-tt" id="tkMP"><span class="w-th off" id="thMP"></span></div></div>
+        <div class="w-tr" id="tgGD"><span class="w-tl">감사일기</span><div class="w-tt" id="tkGD"><span class="w-th off" id="thGD"></span></div></div>
       </div>
-
-      <div class="w-moods" id="moodRow"></div>
-
-      <div class="w-toggles">
-        <div class="w-toggle-row" id="toggleMorning">
-          <span class="w-toggle-label">Morning Page</span>
-          <div class="w-toggle-track" id="trackMorning">
-            <span class="w-toggle-thumb off" id="thumbMorning"></span>
-          </div>
-        </div>
-        <div class="w-toggle-row" id="toggleGratitude">
-          <span class="w-toggle-label">감사일기</span>
-          <div class="w-toggle-track" id="trackGratitude">
-            <span class="w-toggle-thumb off" id="thumbGratitude"></span>
-          </div>
-        </div>
-      </div>
+      <button class="w-gen" id="genBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="genLabel">이번 달 페이지 일괄 생성</span>
+      </button>
     </div>
-    <span class="w-settings-link" id="settingsLink">설정 변경</span>
-  `;
+    <span class="w-sl" id="setLink">설정 변경</span>
+    <div class="embed-box" id="embedBox" title="클릭하여 임베드 URL 복사">${getEmbedUrl()}</div>`;
 
   renderClock();
   renderMoods();
   setupToggles();
   fetchWeather();
-  checkTodayStatus();
+  chkToday();
 
-  document.getElementById('settingsLink').onclick = () => {
-    S.step = 0; saveState(S); render();
-  };
-
-  document.getElementById('refreshBtn').onclick = function() {
-    this.classList.add('spinning');
-    setTimeout(() => this.classList.remove('spinning'), 600);
-    fetchWeather();
-    checkTodayStatus();
+  document.getElementById('setLink').onclick=()=>{C.s=0;saveCfg(C);render();};
+  document.getElementById('rfBtn').onclick=function(){this.classList.add('spin');setTimeout(()=>this.classList.remove('spin'),600);fetchWeather();chkToday();};
+  document.getElementById('genBtn').onclick=generateMonth;
+  document.getElementById('embedBox').onclick=function(){
+    navigator.clipboard.writeText(getEmbedUrl()).then(()=>{this.textContent='URL 복사 완료!';setTimeout(()=>{this.textContent=getEmbedUrl();},1500);});
   };
 }
 
 function renderClock() {
-  const area = document.getElementById('clockArea');
-  if (!area) return;
-  const now = getNow();
-  const size = 160, sw = 10, r = size/2 - sw/2;
-  const circ = 2 * Math.PI * r;
-  const progress = (now.getHours() * 60 + now.getMinutes()) / (24*60);
-  const offset = circ * (1 - progress);
+  const area=document.getElementById('clkA'); if(!area)return;
+  const now=getNow(), sz=160, sw=10, r=sz/2-sw/2, circ=2*Math.PI*r;
+  const prog=(now.getHours()*60+now.getMinutes())/(24*60), off=circ*(1-prog);
 
-  if (S.clockStyle === 'digital') {
-    area.innerHTML = `
-      <svg class="w-clock-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
-        <circle cx="${size/2}" cy="${size/2}" r="${r}" class="w-clock-bg-ring" stroke-width="${sw}"/>
-        <circle cx="${size/2}" cy="${size/2}" r="${r}" class="w-clock-progress" stroke-width="${sw}"
-          stroke-dasharray="${circ}" stroke-dashoffset="${offset}" id="progressRing"/>
+  if(C.cs==='digital') {
+    area.innerHTML=`
+      <svg class="w-svg" width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="transform:rotate(-90deg)">
+        <circle cx="${sz/2}" cy="${sz/2}" r="${r}" class="w-bgr" stroke-width="${sw}"/>
+        <circle cx="${sz/2}" cy="${sz/2}" r="${r}" class="w-pr" stroke-width="${sw}" stroke-dasharray="${circ}" stroke-dashoffset="${off}" id="pRing"/>
       </svg>
-      <div class="w-clock-inner">
-        <span class="w-time" id="timeDisplay">${formatTime(now)}</span>
-        <span class="w-date-small" id="dateDisplay">${formatDate(now)}</span>
-      </div>
-      <button type="button" class="w-weather-btn" id="weatherBtn" title="날씨">
-        <span id="weatherIcon">☀️</span>
-      </button>
-      <div class="w-weather-tooltip" id="weatherTooltip"></div>
-    `;
-
-    clockInterval = setInterval(() => {
-      const n = getNow();
-      const el = document.getElementById('timeDisplay');
-      const dateEl = document.getElementById('dateDisplay');
-      const ring = document.getElementById('progressRing');
-      if (el) el.textContent = formatTime(n);
-      if (dateEl) dateEl.textContent = formatDate(n);
-      if (ring) {
-        const p = (n.getHours()*60 + n.getMinutes()) / (24*60);
-        ring.setAttribute('stroke-dashoffset', circ * (1-p));
-      }
-    }, 1000);
-
+      <div class="w-ci"><span class="w-tm" id="tDisp">${fmtTime(now)}</span><span class="w-dt" id="dDisp">${fmtDate(now)}</span></div>
+      <button class="w-wb" id="wBtn"><span id="wIco">☀️</span></button>
+      <div class="w-wt" id="wTip"></div>`;
+    clockIv=setInterval(()=>{
+      const n=getNow();
+      const t=document.getElementById('tDisp'),d=document.getElementById('dDisp'),rg=document.getElementById('pRing');
+      if(t)t.textContent=fmtTime(n);if(d)d.textContent=fmtDate(n);
+      if(rg){const p=(n.getHours()*60+n.getMinutes())/(24*60);rg.setAttribute('stroke-dashoffset',circ*(1-p));}
+    },1000);
   } else {
-    // Analog clock
-    const h = now.getHours() % 12, m = now.getMinutes(), s = now.getSeconds();
-    const hDeg = (h + m/60) * 30;
-    const mDeg = (m + s/60) * 6;
-    const sDeg = s * 6;
-
-    area.innerHTML = `
-      <svg class="w-clock-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg)">
-        <circle cx="${size/2}" cy="${size/2}" r="${r}" class="w-clock-bg-ring" stroke-width="${sw}"/>
-        <circle cx="${size/2}" cy="${size/2}" r="${r}" class="w-clock-progress" stroke-width="${sw}"
-          stroke-dasharray="${circ}" stroke-dashoffset="${offset}" id="progressRing"/>
+    const h=now.getHours()%12,m=now.getMinutes(),s=now.getSeconds();
+    area.innerHTML=`
+      <svg class="w-svg" width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="transform:rotate(-90deg)">
+        <circle cx="${sz/2}" cy="${sz/2}" r="${r}" class="w-bgr" stroke-width="${sw}"/>
+        <circle cx="${sz/2}" cy="${sz/2}" r="${r}" class="w-pr" stroke-width="${sw}" stroke-dasharray="${circ}" stroke-dashoffset="${off}" id="pRing"/>
       </svg>
-      <div class="w-clock-inner">
-        <div class="w-analog-face" id="analogFace">
-          <!-- Hour markers -->
-          ${[...Array(12)].map((_,i) => {
-            const angle = i * 30;
-            const len = i % 3 === 0 ? 8 : 4;
-            return `<div class="marker" style="height:${len}px;top:${4}px;transform:translateX(-50%) rotate(${angle}deg);transform-origin:center ${50}px"></div>`;
-          }).join('')}
-          <div class="w-hand w-hand-hour" id="handHour" style="transform:translateX(-50%) rotate(${hDeg}deg)"></div>
-          <div class="w-hand w-hand-minute" id="handMinute" style="transform:translateX(-50%) rotate(${mDeg}deg)"></div>
-          <div class="w-hand w-hand-second" id="handSecond" style="transform:translateX(-50%) rotate(${sDeg}deg)"></div>
-          <div class="w-hand-center"></div>
+      <div class="w-ci">
+        <div class="w-af">
+          ${[...Array(12)].map((_,i)=>{const a=i*30,len=i%3===0?8:4;return`<div class="mk" style="height:${len}px;top:4px;transform:translateX(-50%) rotate(${a}deg);transform-origin:center 50px"></div>`;}).join('')}
+          <div class="w-hd w-hh" id="hH" style="transform:translateX(-50%) rotate(${(h+m/60)*30}deg)"></div>
+          <div class="w-hd w-hm" id="hM" style="transform:translateX(-50%) rotate(${(m+s/60)*6}deg)"></div>
+          <div class="w-hd w-hs" id="hS" style="transform:translateX(-50%) rotate(${s*6}deg)"></div>
+          <div class="w-hc"></div>
         </div>
       </div>
-      <button type="button" class="w-weather-btn" id="weatherBtn" title="날씨">
-        <span id="weatherIcon">☀️</span>
-      </button>
-      <div class="w-weather-tooltip" id="weatherTooltip"></div>
-    `;
-
-    clockInterval = setInterval(() => {
-      const n = getNow();
-      const hh = n.getHours()%12, mm = n.getMinutes(), ss = n.getSeconds();
-      const hEl = document.getElementById('handHour');
-      const mEl = document.getElementById('handMinute');
-      const sEl = document.getElementById('handSecond');
-      const ring = document.getElementById('progressRing');
-      if (hEl) hEl.style.transform = `translateX(-50%) rotate(${(hh+mm/60)*30}deg)`;
-      if (mEl) mEl.style.transform = `translateX(-50%) rotate(${(mm+ss/60)*6}deg)`;
-      if (sEl) sEl.style.transform = `translateX(-50%) rotate(${ss*6}deg)`;
-      if (ring) {
-        const p = (n.getHours()*60+n.getMinutes())/(24*60);
-        ring.setAttribute('stroke-dashoffset', circ*(1-p));
-      }
-    }, 1000);
+      <button class="w-wb" id="wBtn"><span id="wIco">☀️</span></button>
+      <div class="w-wt" id="wTip"></div>`;
+    clockIv=setInterval(()=>{
+      const n=getNow(),hh=n.getHours()%12,mm=n.getMinutes(),ss=n.getSeconds();
+      const eH=document.getElementById('hH'),eM=document.getElementById('hM'),eS=document.getElementById('hS'),rg=document.getElementById('pRing');
+      if(eH)eH.style.transform=`translateX(-50%) rotate(${(hh+mm/60)*30}deg)`;
+      if(eM)eM.style.transform=`translateX(-50%) rotate(${(mm+ss/60)*6}deg)`;
+      if(eS)eS.style.transform=`translateX(-50%) rotate(${ss*6}deg)`;
+      if(rg){const p=(n.getHours()*60+n.getMinutes())/(24*60);rg.setAttribute('stroke-dashoffset',circ*(1-p));}
+    },1000);
   }
-
-  // Weather button toggle
-  setTimeout(() => {
-    const btn = document.getElementById('weatherBtn');
-    const tooltip = document.getElementById('weatherTooltip');
-    if (btn && tooltip) {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        tooltip.classList.toggle('show');
-      };
-      document.addEventListener('click', () => tooltip.classList.remove('show'), { once: false });
-    }
-  }, 0);
+  setTimeout(()=>{
+    const btn=document.getElementById('wBtn'),tip=document.getElementById('wTip');
+    if(btn&&tip){btn.onclick=e=>{e.stopPropagation();tip.classList.toggle('show');};document.addEventListener('click',()=>tip.classList.remove('show'));}
+  },0);
 }
 
 function renderMoods() {
-  const moods = [
-    { emoji: '😊', label: '좋음', mood: '😊 좋음' },
-    { emoji: '✦', label: '평온', mood: '😐 보통' },
-    { emoji: '☁', label: '흐림', mood: '😔 나쁨' },
-  ];
-
-  const row = document.getElementById('moodRow');
-  if (!row) return;
-
-  row.innerHTML = moods.map(m =>
-    `<button type="button" class="w-mood-btn ${S.selectedMood === m.mood ? 'active' : ''}" data-mood="${m.mood}" title="${m.label}">${m.emoji}</button>`
-  ).join('');
-
-  row.querySelectorAll('.w-mood-btn').forEach(btn => {
-    btn.onclick = function() {
-      row.querySelectorAll('.w-mood-btn').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-      S.selectedMood = this.dataset.mood;
-      saveState(S);
-    };
-  });
+  const moods=[{e:'😊',l:'좋음',m:'😊 좋음'},{e:'✦',l:'평온',m:'😐 보통'},{e:'☁',l:'흐림',m:'😔 나쁨'}];
+  const row=document.getElementById('moodR');if(!row)return;
+  row.innerHTML=moods.map(m=>`<button class="w-mb ${C.mood===m.m?'act':''}" data-m="${m.m}" title="${m.l}">${m.e}</button>`).join('');
+  row.querySelectorAll('.w-mb').forEach(b=>{b.onclick=function(){
+    row.querySelectorAll('.w-mb').forEach(x=>x.classList.remove('act'));
+    this.classList.add('act');C.mood=this.dataset.m;saveCfg(C);
+    // Auto-save mood to today's morning page if it exists
+    if(C.nc&&C.mpDb&&todayPageIds.mp){
+      apiJson('/api/morning-page',{databaseId:C.mpDb,mood:C.mood,pageId:todayPageIds.mp}).catch(()=>{});
+    }
+  };});
 }
 
 function setupToggles() {
-  // Morning Page toggle → opens modal
-  document.getElementById('toggleMorning').onclick = () => {
-    openMorningPageModal();
-  };
-
-  // Gratitude toggle → opens modal
-  document.getElementById('toggleGratitude').onclick = () => {
-    openGratitudeModal();
-  };
+  document.getElementById('tgMP').onclick=()=>openMP();
+  document.getElementById('tgGD').onclick=()=>openGD();
 }
 
-function setToggleState(trackId, thumbId, on) {
-  const track = document.getElementById(trackId);
-  const thumb = document.getElementById(thumbId);
-  if (!track || !thumb) return;
-  if (on) {
-    track.classList.add('on');
-    thumb.classList.remove('off'); thumb.classList.add('on');
-  } else {
-    track.classList.remove('on');
-    thumb.classList.add('off'); thumb.classList.remove('on');
-  }
+function setTog(tk,th,on) {
+  const t=document.getElementById(tk),h=document.getElementById(th);if(!t||!h)return;
+  if(on){t.classList.add('on');h.classList.remove('off');h.classList.add('on');}
+  else{t.classList.remove('on');h.classList.add('off');h.classList.remove('on');}
 }
 
-// ═══════════════════════════════════════════
-// Weather
-// ═══════════════════════════════════════════
+// ── Weather ──
 async function fetchWeather() {
-  const iconEl = document.getElementById('weatherIcon');
-  const tooltipEl = document.getElementById('weatherTooltip');
-  if (!iconEl || !tooltipEl) return;
+  const ico=document.getElementById('wIco'),tip=document.getElementById('wTip');if(!ico||!tip)return;
+  try{
+    const r=await fetch(`/api/weather?city=${encodeURIComponent(C.ci)}`);
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    ico.textContent=d.icon||'☀️';
+    tip.innerHTML=`<div class="tp">${d.temp}°C ${d.icon}</div><div class="dl">체감 ${d.feelsLike}°C<br>습도 ${d.humidity}%<br>${d.weatherDesc}</div>`;
+  }catch(e){ico.textContent='🌤️';tip.innerHTML=`<div class="dl">날씨 정보 불가</div>`;}
+}
 
-  try {
-    const res = await fetch(`/api/weather?city=${encodeURIComponent(S.city)}`);
-    if (!res.ok) throw new Error('Weather API error');
-    weatherData = await res.json();
+// ── Today's status ──
+async function chkToday() {
+  if(!C.nc||!C.mpDb||!C.gdDb)return;
+  try{
+    const p=new URLSearchParams({morningPageDbId:C.mpDb,gratitudeDbId:C.gdDb,configId:C.cid});
+    const r=await api(`/api/status/today?${p}`);if(!r.ok)return;
+    const d=await r.json();
+    todayPageIds.mp=d.morningPageId||null;
+    todayPageIds.gd=d.gratitudeDiaryId||null;
+    setTog('tkMP','thMP',d.morningPage);
+    setTog('tkGD','thGD',d.gratitudeDiary);
+    if(d.morningPageMood&&!C.mood){C.mood=d.morningPageMood;saveCfg(C);renderMoods();}
+  }catch(_){}
+}
 
-    iconEl.textContent = weatherData.icon || '☀️';
-    tooltipEl.innerHTML = `
-      <div class="temp">${weatherData.temp}°C ${weatherData.icon}</div>
-      <div class="detail">
-        체감 ${weatherData.feelsLike}°C<br>
-        습도 ${weatherData.humidity}%<br>
-        ${weatherData.weatherDesc}
-      </div>
-    `;
-  } catch (err) {
-    // Fallback: show a static icon
-    iconEl.textContent = '🌤️';
-    tooltipEl.innerHTML = `<div class="detail">날씨 정보를 불러올 수 없습니다</div>`;
+// ── Generate Month Pages ──
+async function generateMonth() {
+  if(!C.nc||!C.cid){alert('Notion 연결이 필요합니다. 설정에서 연동하세요.');return;}
+  if(!C.mpDb||!C.gdDb){alert('DB가 설정되지 않았습니다. 설정에서 DB를 생성하세요.');return;}
+  const btn=document.getElementById('genBtn'),lbl=document.getElementById('genLabel');
+  btn.classList.add('loading');lbl.textContent='생성 중...';
+  try{
+    // Generate for both databases
+    const [mpR,gdR]=await Promise.all([
+      apiJson('/api/generate-month',{databaseId:C.mpDb,type:'morning-page'}),
+      apiJson('/api/generate-month',{databaseId:C.gdDb,type:'gratitude'})
+    ]);
+    const mpD=await mpR.json(), gdD=await gdR.json();
+    const total=(mpD.created||0)+(gdD.created||0);
+    const skipped=(mpD.skipped||0)+(gdD.skipped||0);
+    lbl.textContent=`완료! ${total}개 생성, ${skipped}개 이미 존재`;
+    setTimeout(()=>{lbl.textContent='이번 달 페이지 일괄 생성';btn.classList.remove('loading');},3000);
+    chkToday();
+  }catch(e){
+    lbl.textContent='생성 실패';btn.classList.remove('loading');
+    setTimeout(()=>{lbl.textContent='이번 달 페이지 일괄 생성';},2000);
   }
 }
 
-// ═══════════════════════════════════════════
-// Today's status check
-// ═══════════════════════════════════════════
-async function checkTodayStatus() {
-  if (!S.notionConnected || !S.morningPageDbId || !S.gratitudeDbId) return;
-
-  try {
-    const params = new URLSearchParams({
-      morningPageDbId: S.morningPageDbId,
-      gratitudeDbId: S.gratitudeDbId
-    });
-    const res = await fetch(`/api/status/today?${params}`);
-    if (!res.ok) return;
-    const data = await res.json();
-
-    setToggleState('trackMorning', 'thumbMorning', data.morningPage);
-    setToggleState('trackGratitude', 'thumbGratitude', data.gratitudeDiary);
-  } catch (_) {}
-}
-
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // Modals
-// ═══════════════════════════════════════════
-function openMorningPageModal() {
-  const modal = document.getElementById('morningPageModal');
-  modal.classList.add('show');
-
-  // Reset mood selection
-  document.querySelectorAll('.mood-card').forEach(c => {
-    c.classList.remove('selected');
-    if (S.selectedMood && c.dataset.mood === S.selectedMood) c.classList.add('selected');
-  });
-
-  let selectedMood = S.selectedMood || '';
-
-  document.querySelectorAll('.mood-card').forEach(card => {
-    card.onclick = function() {
-      document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('selected'));
-      this.classList.add('selected');
-      selectedMood = this.dataset.mood;
-    };
-  });
-
-  document.getElementById('mpCancel').onclick = () => modal.classList.remove('show');
-  document.getElementById('mpSave').onclick = async () => {
-    const content = document.getElementById('morningPageText').value.trim();
-    if (!content) { alert('내용을 입력해주세요.'); return; }
-
-    if (S.notionConnected && S.morningPageDbId) {
-      try {
-        const res = await fetch('/api/morning-page', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            databaseId: S.morningPageDbId,
-            content,
-            mood: selectedMood
-          })
-        });
-        const data = await res.json();
-        if (data.ok) {
-          setToggleState('trackMorning', 'thumbMorning', true);
-          modal.classList.remove('show');
-          document.getElementById('morningPageText').value = '';
-        } else {
-          alert('저장 실패: ' + (data.error || ''));
-        }
-      } catch (err) {
-        alert('서버 오류가 발생했습니다.');
-      }
-    } else {
-      // Local-only mode
-      const key = `mp-${new Date().toISOString().split('T')[0]}`;
-      localStorage.setItem(key, JSON.stringify({ content, mood: selectedMood, timestamp: Date.now() }));
-      setToggleState('trackMorning', 'thumbMorning', true);
-      modal.classList.remove('show');
-      document.getElementById('morningPageText').value = '';
+// ═══════════════════════════════════════════════
+function openMP() {
+  const modal=document.getElementById('mpModal');modal.classList.add('show');
+  document.querySelectorAll('.mood-c').forEach(c=>{c.classList.remove('sel');if(C.mood&&c.dataset.mood===C.mood)c.classList.add('sel');});
+  let selMood=C.mood||'';
+  document.querySelectorAll('.mood-c').forEach(c=>{c.onclick=function(){document.querySelectorAll('.mood-c').forEach(x=>x.classList.remove('sel'));this.classList.add('sel');selMood=this.dataset.mood;};});
+  document.getElementById('mpCancel').onclick=()=>modal.classList.remove('show');
+  document.getElementById('mpSave').onclick=async()=>{
+    const txt=document.getElementById('mpText').value.trim();
+    if(!txt){alert('내용을 입력해주세요.');return;}
+    if(C.nc&&C.mpDb){
+      try{
+        const r=await apiJson('/api/morning-page',{databaseId:C.mpDb,content:txt,mood:selMood,pageId:todayPageIds.mp||undefined});
+        const d=await r.json();
+        if(d.ok){
+          if(d.pageId)todayPageIds.mp=d.pageId;
+          setTog('tkMP','thMP',true);modal.classList.remove('show');document.getElementById('mpText').value='';
+          if(selMood){C.mood=selMood;saveCfg(C);renderMoods();}
+        }else{alert('저장 실패: '+(d.error||''));}
+      }catch(e){alert('서버 오류');}
+    }else{
+      const k=`mp-${new Date().toISOString().split('T')[0]}`;
+      localStorage.setItem(k,JSON.stringify({content:txt,mood:selMood,ts:Date.now()}));
+      setTog('tkMP','thMP',true);modal.classList.remove('show');document.getElementById('mpText').value='';
     }
   };
 }
 
-function openGratitudeModal() {
-  const modal = document.getElementById('gratitudeModal');
-  modal.classList.add('show');
-
-  document.getElementById('gratCancel').onclick = () => modal.classList.remove('show');
-  document.getElementById('gratSave').onclick = async () => {
-    const g1 = document.getElementById('grat1').value.trim();
-    const g2 = document.getElementById('grat2').value.trim();
-    const g3 = document.getElementById('grat3').value.trim();
-
-    if (!g1 && !g2 && !g3) { alert('감사한 것을 하나 이상 입력해주세요.'); return; }
-
-    if (S.notionConnected && S.gratitudeDbId) {
-      try {
-        const res = await fetch('/api/gratitude', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            databaseId: S.gratitudeDbId,
-            gratitude1: g1,
-            gratitude2: g2,
-            gratitude3: g3
-          })
-        });
-        const data = await res.json();
-        if (data.ok) {
-          setToggleState('trackGratitude', 'thumbGratitude', true);
-          modal.classList.remove('show');
-          document.getElementById('grat1').value = '';
-          document.getElementById('grat2').value = '';
-          document.getElementById('grat3').value = '';
-        } else {
-          alert('저장 실패: ' + (data.error || ''));
-        }
-      } catch (err) {
-        alert('서버 오류가 발생했습니다.');
-      }
-    } else {
-      // Local-only mode
-      const key = `gd-${new Date().toISOString().split('T')[0]}`;
-      localStorage.setItem(key, JSON.stringify({ g1, g2, g3, timestamp: Date.now() }));
-      setToggleState('trackGratitude', 'thumbGratitude', true);
-      modal.classList.remove('show');
-      document.getElementById('grat1').value = '';
-      document.getElementById('grat2').value = '';
-      document.getElementById('grat3').value = '';
+function openGD() {
+  const modal=document.getElementById('gdModal');modal.classList.add('show');
+  document.getElementById('gdCancel').onclick=()=>modal.classList.remove('show');
+  document.getElementById('gdSave').onclick=async()=>{
+    const v1=document.getElementById('g1').value.trim(),v2=document.getElementById('g2').value.trim(),v3=document.getElementById('g3').value.trim();
+    if(!v1&&!v2&&!v3){alert('하나 이상 입력해주세요.');return;}
+    if(C.nc&&C.gdDb){
+      try{
+        const r=await apiJson('/api/gratitude',{databaseId:C.gdDb,gratitude1:v1,gratitude2:v2,gratitude3:v3,pageId:todayPageIds.gd||undefined});
+        const d=await r.json();
+        if(d.ok){
+          if(d.pageId)todayPageIds.gd=d.pageId;
+          setTog('tkGD','thGD',true);modal.classList.remove('show');
+          document.getElementById('g1').value='';document.getElementById('g2').value='';document.getElementById('g3').value='';
+        }else{alert('저장 실패: '+(d.error||''));}
+      }catch(e){alert('서버 오류');}
+    }else{
+      const k=`gd-${new Date().toISOString().split('T')[0]}`;
+      localStorage.setItem(k,JSON.stringify({g1:v1,g2:v2,g3:v3,ts:Date.now()}));
+      setTog('tkGD','thGD',true);modal.classList.remove('show');
+      document.getElementById('g1').value='';document.getElementById('g2').value='';document.getElementById('g3').value='';
     }
   };
 }
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // URL param handling (OAuth callback)
-// ═══════════════════════════════════════════
-function handleUrlParams() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('auth_success')) {
-    S.notionConnected = true;
-    if (S.step < 4) S.step = 2; // Go back to Notion step to finish setup
-    saveState(S);
-    window.history.replaceState({}, '', '/');
+// ═══════════════════════════════════════════════
+function handleParams() {
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('auth_success')&&p.get('configId')){
+    C.nc=true; C.cid=p.get('configId');
+    if(C.s<4)C.s=2;
+    saveCfg(C);
+    window.history.replaceState({},'','/'+window.location.hash);
   }
-  if (params.get('auth_error')) {
-    console.error('Auth error:', params.get('auth_error'));
-    window.history.replaceState({}, '', '/');
+  if(p.get('auth_error')){
+    console.error('Auth error:',p.get('auth_error'));
+    window.history.replaceState({},'','/'+window.location.hash);
   }
 }
 
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // Init
-// ═══════════════════════════════════════════
-handleUrlParams();
+// ═══════════════════════════════════════════════
+handleParams();
 render();
 </script>
 </body>
