@@ -204,11 +204,11 @@ app.post('/api/databases/setup', requireAuth, async (req, res) => {
         'Mood': {
           select: {
             options: [
-              { name: '😊 좋음', color: 'green' },
-              { name: '😐 보통', color: 'yellow' },
-              { name: '😔 나쁨', color: 'red' },
-              { name: '😴 피곤', color: 'gray' },
-              { name: '🔥 열정', color: 'orange' }
+              { name: '😊 Good', color: 'green' },
+              { name: '😐 Okay', color: 'yellow' },
+              { name: '😔 Bad', color: 'red' },
+              { name: '😴 Tired', color: 'gray' },
+              { name: '🔥 Fired Up', color: 'orange' }
             ]
           }
         },
@@ -219,7 +219,7 @@ app.post('/api/databases/setup', requireAuth, async (req, res) => {
     // Gratitude Diary DB
     const gdDb = await notion.databases.create({
       parent: { type: 'page_id', page_id: parentPageId },
-      title: [{ type: 'text', text: { content: '감사일기 (Gratitude Diary)' } }],
+      title: [{ type: 'text', text: { content: 'Gratitude Diary' } }],
       icon: { type: 'emoji', emoji: '🙏' },
       properties: {
         'Name': { title: {} },
@@ -289,7 +289,7 @@ app.post('/api/generate-month', requireAuth, async (req, res) => {
         continue;
       }
 
-      const titlePrefix = type === 'morning-page' ? '모닝페이지' : '감사일기';
+      const titlePrefix = type === 'morning-page' ? 'Morning Page' : 'Gratitude Diary';
       const props = {
         'Name': { title: [{ text: { content: `${titlePrefix} ${dateStr}` } }] },
         'Date': { date: { start: dateStr } },
@@ -402,7 +402,7 @@ app.post('/api/morning-page', requireAuth, async (req, res) => {
         const page = await notion.pages.create({
           parent: { database_id: databaseId },
           properties: {
-            'Name': { title: [{ text: { content: `모닝페이지 ${today}` } }] },
+            'Name': { title: [{ text: { content: `Morning Page ${today}` } }] },
             'Date': { date: { start: today } },
             'Content': { rich_text: [{ text: { content: content || '' } }] },
             ...(mood ? { 'Mood': { select: { name: mood } } } : {}),
@@ -460,7 +460,7 @@ app.post('/api/gratitude', requireAuth, async (req, res) => {
         const page = await notion.pages.create({
           parent: { database_id: databaseId },
           properties: {
-            'Name': { title: [{ text: { content: `감사일기 ${today}` } }] },
+            'Name': { title: [{ text: { content: `Gratitude Diary ${today}` } }] },
             'Date': { date: { start: today } },
             'Gratitude 1': { rich_text: [{ text: { content: gratitude1 || '' } }] },
             'Gratitude 2': { rich_text: [{ text: { content: gratitude2 || '' } }] },

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -183,19 +183,19 @@
   <div class="mo" id="mpModal">
     <div class="mo-b">
       <h3>Morning Page</h3>
-      <p>오늘의 생각과 감정을 자유롭게 적어보세요.</p>
-      <label class="ob-lbl">오늘의 기분</label>
+      <p>Write your thoughts and feelings freely.</p>
+      <label class="ob-lbl">Today's Mood</label>
       <div class="ob-og" id="moodSel" style="margin-bottom:14px">
-        <button type="button" class="ob-oc mood-c" data-mood="😊 좋음"><span class="ic">😊</span><span class="lb">좋음</span></button>
-        <button type="button" class="ob-oc mood-c" data-mood="😐 보통"><span class="ic">😐</span><span class="lb">보통</span></button>
-        <button type="button" class="ob-oc mood-c" data-mood="😔 나쁨"><span class="ic">😔</span><span class="lb">나쁨</span></button>
-        <button type="button" class="ob-oc mood-c" data-mood="🔥 열정"><span class="ic">🔥</span><span class="lb">열정</span></button>
+        <button type="button" class="ob-oc mood-c" data-mood="😊 Good"><span class="ic">😊</span><span class="lb">Good</span></button>
+        <button type="button" class="ob-oc mood-c" data-mood="😐 Okay"><span class="ic">😐</span><span class="lb">Okay</span></button>
+        <button type="button" class="ob-oc mood-c" data-mood="😔 Bad"><span class="ic">😔</span><span class="lb">Bad</span></button>
+        <button type="button" class="ob-oc mood-c" data-mood="🔥 Fired Up"><span class="ic">🔥</span><span class="lb">Fired Up</span></button>
       </div>
-      <label class="ob-lbl">모닝페이지</label>
-      <textarea class="mo-ta" id="mpText" placeholder="마음 가는 대로 써보세요..."></textarea>
+      <label class="ob-lbl">Morning Page</label>
+      <textarea class="mo-ta" id="mpText" placeholder="Write whatever comes to mind..."></textarea>
       <div class="mo-ac">
-        <button type="button" class="ob-btn ob-btn2" id="mpCancel">취소</button>
-        <button type="button" class="ob-btn" id="mpSave" style="background:var(--accent)">저장</button>
+        <button type="button" class="ob-btn ob-btn2" id="mpCancel">Cancel</button>
+        <button type="button" class="ob-btn" id="mpSave" style="background:var(--accent)">Save</button>
       </div>
     </div>
   </div>
@@ -203,17 +203,17 @@
   <!-- Gratitude Diary Modal -->
   <div class="mo" id="gdModal">
     <div class="mo-b">
-      <h3>감사일기</h3>
-      <p>오늘 감사한 세 가지를 적어보세요.</p>
-      <label class="ob-lbl">감사한 것 1</label>
-      <textarea class="mo-ta" id="g1" style="min-height:60px" placeholder="첫 번째 감사..."></textarea>
-      <label class="ob-lbl" style="margin-top:10px">감사한 것 2</label>
-      <textarea class="mo-ta" id="g2" style="min-height:60px" placeholder="두 번째 감사..."></textarea>
-      <label class="ob-lbl" style="margin-top:10px">감사한 것 3</label>
-      <textarea class="mo-ta" id="g3" style="min-height:60px" placeholder="세 번째 감사..."></textarea>
+      <h3>Gratitude Diary</h3>
+      <p>Write three things you're grateful for today.</p>
+      <label class="ob-lbl">Gratitude 1</label>
+      <textarea class="mo-ta" id="g1" style="min-height:60px" placeholder="First gratitude..."></textarea>
+      <label class="ob-lbl" style="margin-top:10px">Gratitude 2</label>
+      <textarea class="mo-ta" id="g2" style="min-height:60px" placeholder="Second gratitude..."></textarea>
+      <label class="ob-lbl" style="margin-top:10px">Gratitude 3</label>
+      <textarea class="mo-ta" id="g3" style="min-height:60px" placeholder="Third gratitude..."></textarea>
       <div class="mo-ac">
-        <button type="button" class="ob-btn ob-btn2" id="gdCancel">취소</button>
-        <button type="button" class="ob-btn" id="gdSave" style="background:var(--accent)">저장</button>
+        <button type="button" class="ob-btn ob-btn2" id="gdCancel">Cancel</button>
+        <button type="button" class="ob-btn" id="gdSave" style="background:var(--accent)">Save</button>
       </div>
     </div>
   </div>
@@ -223,17 +223,17 @@
 // Config stored in URL hash (persists in Notion embed)
 // ═══════════════════════════════════════════════
 const CITIES = {
-  'KR': { name:'대한민국', cities:{ 'Seoul':{l:'서울',tz:'Asia/Seoul'}, 'Busan':{l:'부산',tz:'Asia/Seoul'}, 'Incheon':{l:'인천',tz:'Asia/Seoul'}, 'Daegu':{l:'대구',tz:'Asia/Seoul'}, 'Jeju':{l:'제주',tz:'Asia/Seoul'} }},
-  'JP': { name:'일본', cities:{ 'Tokyo':{l:'도쿄',tz:'Asia/Tokyo'}, 'Osaka':{l:'오사카',tz:'Asia/Tokyo'} }},
-  'US': { name:'미국', cities:{ 'New York':{l:'뉴욕',tz:'America/New_York'}, 'Los Angeles':{l:'LA',tz:'America/Los_Angeles'}, 'Chicago':{l:'시카고',tz:'America/Chicago'} }},
-  'GB': { name:'영국', cities:{ 'London':{l:'런던',tz:'Europe/London'} }},
-  'FR': { name:'프랑스', cities:{ 'Paris':{l:'파리',tz:'Europe/Paris'} }},
-  'DE': { name:'독일', cities:{ 'Berlin':{l:'베를린',tz:'Europe/Berlin'} }},
-  'CN': { name:'중국', cities:{ 'Beijing':{l:'베이징',tz:'Asia/Shanghai'}, 'Shanghai':{l:'상하이',tz:'Asia/Shanghai'} }},
-  'TH': { name:'태국', cities:{ 'Bangkok':{l:'방콕',tz:'Asia/Bangkok'} }},
-  'VN': { name:'베트남', cities:{ 'Ho Chi Minh':{l:'호치민',tz:'Asia/Ho_Chi_Minh'} }},
-  'AU': { name:'호주', cities:{ 'Sydney':{l:'시드니',tz:'Australia/Sydney'} }},
-  'SG': { name:'싱가포르', cities:{ 'Singapore':{l:'싱가포르',tz:'Asia/Singapore'} }},
+  'KR': { name:'South Korea', cities:{ 'Seoul':{l:'Seoul',tz:'Asia/Seoul'}, 'Busan':{l:'Busan',tz:'Asia/Seoul'}, 'Incheon':{l:'Incheon',tz:'Asia/Seoul'}, 'Daegu':{l:'Daegu',tz:'Asia/Seoul'}, 'Jeju':{l:'Jeju',tz:'Asia/Seoul'} }},
+  'JP': { name:'Japan', cities:{ 'Tokyo':{l:'Tokyo',tz:'Asia/Tokyo'}, 'Osaka':{l:'Osaka',tz:'Asia/Tokyo'} }},
+  'US': { name:'United States', cities:{ 'New York':{l:'New York',tz:'America/New_York'}, 'Los Angeles':{l:'Los Angeles',tz:'America/Los_Angeles'}, 'Chicago':{l:'Chicago',tz:'America/Chicago'} }},
+  'GB': { name:'United Kingdom', cities:{ 'London':{l:'London',tz:'Europe/London'} }},
+  'FR': { name:'France', cities:{ 'Paris':{l:'Paris',tz:'Europe/Paris'} }},
+  'DE': { name:'Germany', cities:{ 'Berlin':{l:'Berlin',tz:'Europe/Berlin'} }},
+  'CN': { name:'China', cities:{ 'Beijing':{l:'Beijing',tz:'Asia/Shanghai'}, 'Shanghai':{l:'Shanghai',tz:'Asia/Shanghai'} }},
+  'TH': { name:'Thailand', cities:{ 'Bangkok':{l:'Bangkok',tz:'Asia/Bangkok'} }},
+  'VN': { name:'Vietnam', cities:{ 'Ho Chi Minh':{l:'Ho Chi Minh',tz:'Asia/Ho_Chi_Minh'} }},
+  'AU': { name:'Australia', cities:{ 'Sydney':{l:'Sydney',tz:'Australia/Sydney'} }},
+  'SG': { name:'Singapore', cities:{ 'Singapore':{l:'Singapore',tz:'Asia/Singapore'} }},
 };
 
 const DEF = {
@@ -331,8 +331,8 @@ function adjustColor(hex, opacity) {
 
 // ── Time ──
 function getNow() { return new Date(new Date().toLocaleString('en-US',{timeZone:C.tz})); }
-function fmtTime(d) { return d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}); }
-function fmtDate(d) { return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'}); }
+function fmtTime(d) { return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}); }
+function fmtDate(d) { return d.toLocaleDateString('en-US',{month:'short',day:'numeric',weekday:'short'}); }
 
 // ═══════════════════════════════════════════════
 // Render
@@ -345,7 +345,7 @@ let clockIv = null;
 function renderOB() {
   if(clockIv){clearInterval(clockIv);clockIv=null;}
   const steps=[obLoc,obClk,obNotion,obColor];
-  const titles=['지역 설정','시계 스타일','Notion 연동','색상 설정'];
+  const titles=['Location','Clock Style','Notion','Colors'];
   const dots=[0,1,2,3].map(i=>`<span class="ob-sd ${i===C.s?'act':i<C.s?'done':''}"></span>`).join('');
   document.getElementById('app').innerHTML=`
     <div class="ob-win">
@@ -367,13 +367,13 @@ function obLoc() {
   const coOpts=Object.entries(CITIES).map(([k,v])=>`<option value="${k}" ${k===C.co?'selected':''}>${v.name}</option>`).join('');
   function ciOpts(co) { return Object.entries(CITIES[co].cities).map(([k,v])=>`<option value="${k}" ${k===C.ci?'selected':''}>${v.l} (${k})</option>`).join(''); }
   el.innerHTML=`
-    <h2>어디에 계신가요?</h2>
-    <p class="desc">날씨 정보와 시간대를 설정합니다.</p>
-    <label class="ob-lbl">국가</label>
+    <h2>Where are you?</h2>
+    <p class="desc">Set your timezone and weather location.</p>
+    <label class="ob-lbl">Country</label>
     <select class="ob-inp ob-sel" id="sCo">${coOpts}</select>
-    <label class="ob-lbl">도시</label>
+    <label class="ob-lbl">City</label>
     <select class="ob-inp ob-sel" id="sCi">${ciOpts(C.co)}</select>
-    <button class="ob-btn" style="background:var(--accent);margin-top:8px" id="nxt">다음</button>`;
+    <button class="ob-btn" style="background:var(--accent);margin-top:8px" id="nxt">Next</button>`;
   document.getElementById('sCo').onchange=function(){
     C.co=this.value;
     const fc=Object.keys(CITIES[C.co].cities)[0];
@@ -387,13 +387,13 @@ function obLoc() {
 function obClk() {
   const el=document.getElementById('sc');
   el.innerHTML=`
-    <h2>시계 스타일</h2><p class="desc">위젯에 표시할 시계를 선택하세요.</p>
+    <h2>Clock Style</h2><p class="desc">Choose your clock display style.</p>
     <div class="ob-og">
-      <button class="ob-oc ${C.cs==='digital'?'sel':''}" data-v="digital"><span class="ic" style="font-size:24px;font-weight:700;font-family:monospace">07:30</span><span class="lb">디지털</span></button>
-      <button class="ob-oc ${C.cs==='analog'?'sel':''}" data-v="analog"><span class="ic">🕐</span><span class="lb">아날로그</span></button>
+      <button class="ob-oc ${C.cs==='digital'?'sel':''}" data-v="digital"><span class="ic" style="font-size:24px;font-weight:700;font-family:monospace">07:30</span><span class="lb">Digital</span></button>
+      <button class="ob-oc ${C.cs==='analog'?'sel':''}" data-v="analog"><span class="ic">🕐</span><span class="lb">Analog</span></button>
     </div>
-    <button class="ob-btn" style="background:var(--accent)" id="nxt">다음</button>
-    <button class="ob-btn ob-btn2" id="bk">이전</button>`;
+    <button class="ob-btn" style="background:var(--accent)" id="nxt">Next</button>
+    <button class="ob-btn ob-btn2" id="bk">Back</button>`;
   el.querySelectorAll('.ob-oc').forEach(c=>{c.onclick=function(){el.querySelectorAll('.ob-oc').forEach(x=>x.classList.remove('sel'));this.classList.add('sel');C.cs=this.dataset.v;saveCfg(C);};});
   document.getElementById('nxt').onclick=()=>{C.s=2;saveCfg(C);render();};
   document.getElementById('bk').onclick=()=>{C.s=0;saveCfg(C);render();};
@@ -402,10 +402,10 @@ function obClk() {
 function obNotion() {
   const el=document.getElementById('sc');
   el.innerHTML=`
-    <h2>Notion 연동</h2><p class="desc">모닝페이지와 감사일기를 Notion DB에 저장합니다.</p>
+    <h2>Connect Notion</h2><p class="desc">Save your Morning Page and Gratitude Diary to a Notion database.</p>
     <div id="ns"></div><div id="na"></div>
-    <button class="ob-btn" style="background:var(--accent);margin-top:12px" id="nxt">다음</button>
-    <button class="ob-btn ob-btn2" id="bk">이전</button>`;
+    <button class="ob-btn" style="background:var(--accent);margin-top:12px" id="nxt">Next</button>
+    <button class="ob-btn ob-btn2" id="bk">Back</button>`;
   document.getElementById('bk').onclick=()=>{C.s=1;saveCfg(C);render();};
   document.getElementById('nxt').onclick=()=>{C.s=3;saveCfg(C);render();};
   chkNotion();
@@ -419,27 +419,27 @@ async function chkNotion() {
     const d=await r.json();
     if(d.authenticated) {
       C.nc=true; C.cid=d.configId||C.cid; saveCfg(C);
-      ns.innerHTML=`<div class="nb"><span class="dt on"></span><span>${d.workspaceName||'Notion'} 연결됨</span></div>`;
+      ns.innerHTML=`<div class="nb"><span class="dt on"></span><span>${d.workspaceName||'Notion'} Connected</span></div>`;
       if(C.mpDb&&C.gdDb) {
-        na.innerHTML=`<div class="nb"><span class="dt on"></span><span>DB 설정 완료</span></div>
-          <button class="ob-btn ob-btn2" id="dcBtn">연결 해제</button>`;
+        na.innerHTML=`<div class="nb"><span class="dt on"></span><span>Database setup complete</span></div>
+          <button class="ob-btn ob-btn2" id="dcBtn">Disconnect</button>`;
         document.getElementById('dcBtn').onclick=doDisconnect;
       } else {
-        na.innerHTML=`<p class="ob-hint">DB를 자동 생성하거나, 기존 DB를 선택하세요.</p>
-          <button class="ob-btn" style="background:var(--accent)" id="setupBtn">DB 자동 생성</button>
-          <button class="ob-btn ob-btn2" id="dcBtn">연결 해제</button>`;
+        na.innerHTML=`<p class="ob-hint">Auto-create databases or select existing ones.</p>
+          <button class="ob-btn" style="background:var(--accent)" id="setupBtn">Auto-create Databases</button>
+          <button class="ob-btn ob-btn2" id="dcBtn">Disconnect</button>`;
         document.getElementById('setupBtn').onclick=doSetupDb;
         document.getElementById('dcBtn').onclick=doDisconnect;
       }
     } else {
       C.nc=false; saveCfg(C);
-      ns.innerHTML=`<div class="nb"><span class="dt off"></span><span>Notion 미연결</span></div>`;
-      na.innerHTML=`<p class="ob-hint">연결하면 일기가 Notion DB에 자동 저장됩니다. 나중에 설정할 수도 있어요.</p>
-        <a href="/auth/notion" class="ob-btn" style="background:var(--accent);display:block;text-align:center;text-decoration:none;color:#fff;padding:12px;border-radius:12px">Notion 연결하기</a>`;
+      ns.innerHTML=`<div class="nb"><span class="dt off"></span><span>Not connected</span></div>`;
+      na.innerHTML=`<p class="ob-hint">Connect to save entries to Notion automatically. You can set this up later.</p>
+        <a href="/auth/notion" class="ob-btn" style="background:var(--accent);display:block;text-align:center;text-decoration:none;color:#fff;padding:12px;border-radius:12px">Connect Notion</a>`;
     }
   } catch(e) {
-    ns.innerHTML=`<div class="nb"><span class="dt off"></span><span>서버 연결 불가 (로컬 모드)</span></div>`;
-    na.innerHTML=`<p class="ob-hint">서버 미실행. 로컬 모드로 사용 가능합니다.</p>`;
+    ns.innerHTML=`<div class="nb"><span class="dt off"></span><span>Server unavailable (local mode)</span></div>`;
+    na.innerHTML=`<p class="ob-hint">Server not running. Using local mode.</p>`;
   }
 }
 
@@ -453,45 +453,45 @@ async function doSetupDb() {
   try {
     const pr=await api('/api/pages');
     const pd=await pr.json();
-    if(!pd.pages||!pd.pages.length){na.innerHTML=`<p class="ob-hint" style="color:#ef4444">접근 가능한 페이지가 없습니다.</p>`;return;}
+    if(!pd.pages||!pd.pages.length){na.innerHTML=`<p class="ob-hint" style="color:#ef4444">No accessible pages found.</p>`;return;}
     const opts=pd.pages.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
-    na.innerHTML=`<label class="ob-lbl">DB 생성 위치 선택</label>
+    na.innerHTML=`<label class="ob-lbl">Select parent page</label>
       <select class="ob-inp ob-sel" id="ppSel">${opts}</select>
-      <button class="ob-btn" style="background:var(--accent)" id="crBtn">생성하기</button>`;
+      <button class="ob-btn" style="background:var(--accent)" id="crBtn">Create</button>`;
     document.getElementById('crBtn').onclick=async()=>{
       const pid=document.getElementById('ppSel').value;
-      na.innerHTML=`<p class="ob-hint">DB 생성 중...</p>`;
+      na.innerHTML=`<p class="ob-hint">Creating databases...</p>`;
       const r=await apiJson('/api/databases/setup',{parentPageId:pid});
       const d=await r.json();
       if(d.morningPageDbId&&d.gratitudeDbId){
         C.mpDb=d.morningPageDbId;C.gdDb=d.gratitudeDbId;saveCfg(C);
-        na.innerHTML=`<div class="nb"><span class="dt on"></span><span>DB 생성 완료!</span></div>`;
-      } else { na.innerHTML=`<p class="ob-hint" style="color:#ef4444">실패: ${d.error||''}</p>`; }
+        na.innerHTML=`<div class="nb"><span class="dt on"></span><span>Databases created!</span></div>`;
+      } else { na.innerHTML=`<p class="ob-hint" style="color:#ef4444">Failed: ${d.error||''}</p>`; }
     };
-  } catch(e) { na.innerHTML=`<p class="ob-hint" style="color:#ef4444">오류 발생</p>`; }
+  } catch(e) { na.innerHTML=`<p class="ob-hint" style="color:#ef4444">An error occurred</p>`; }
 }
 
 function obColor() {
   const el=document.getElementById('sc');
   const sug=contTx(C.bg);
   el.innerHTML=`
-    <h2>색상 설정</h2><p class="desc">배경, 강조, 텍스트 색상을 설정하세요.</p>
-    <label class="ob-lbl">배경색</label>
+    <h2>Color Settings</h2><p class="desc">Set background, accent, and text colors.</p>
+    <label class="ob-lbl">Background</label>
     <div class="ob-cr"><input type="color" id="bPk" value="${C.bg}"><input type="text" class="ob-inp" id="bHx" value="${C.bg}" style="margin-bottom:0"></div>
-    <p class="ob-hint">뉴모피즘 그림자가 자동 계산됩니다.</p>
-    <label class="ob-lbl">강조색</label>
+    <p class="ob-hint">Neumorphism shadows are auto-calculated from this color.</p>
+    <label class="ob-lbl">Accent</label>
     <div class="ob-cr"><input type="color" id="aPk" value="${C.ac}"><input type="text" class="ob-inp" id="aHx" value="${C.ac}" style="margin-bottom:0"></div>
-    <label class="ob-lbl">텍스트 색상</label>
+    <label class="ob-lbl">Text Color</label>
     <div class="ob-cr"><input type="color" id="tPk" value="${C.tx}"><input type="text" class="ob-inp" id="tHx" value="${C.tx}" style="margin-bottom:0"></div>
-    <button class="ob-inp" id="autoT" style="cursor:pointer;text-align:left;margin-bottom:14px">자동 제안: ${sug}</button>
-    <button class="ob-btn" style="background:var(--accent)" id="fin">위젯 시작하기</button>
-    <button class="ob-btn ob-btn2" id="bk">이전</button>`;
+    <button class="ob-inp" id="autoT" style="cursor:pointer;text-align:left;margin-bottom:14px">Auto-suggest: ${sug}</button>
+    <button class="ob-btn" style="background:var(--accent)" id="fin">Launch Widget</button>
+    <button class="ob-btn ob-btn2" id="bk">Back</button>`;
   function sync(pk,hx,key){
     document.getElementById(pk).oninput=function(){C[key]=this.value;document.getElementById(hx).value=this.value;saveCfg(C);applyTheme();};
     document.getElementById(hx).oninput=function(){if(/^#[0-9A-Fa-f]{6}$/.test(this.value)){C[key]=this.value;document.getElementById(pk).value=this.value;saveCfg(C);applyTheme();}};
   }
   sync('bPk','bHx','bg'); sync('aPk','aHx','ac'); sync('tPk','tHx','tx');
-  document.getElementById('autoT').onclick=function(){const s=contTx(C.bg);C.tx=s;saveCfg(C);applyTheme();document.getElementById('tPk').value=s;document.getElementById('tHx').value=s;this.textContent='자동 제안: '+s;};
+  document.getElementById('autoT').onclick=function(){const s=contTx(C.bg);C.tx=s;saveCfg(C);applyTheme();document.getElementById('tPk').value=s;document.getElementById('tHx').value=s;this.textContent='Auto-suggest: '+s;};
   document.getElementById('fin').onclick=()=>{C.s=99;saveCfg(C);render();};
   document.getElementById('bk').onclick=()=>{C.s=2;saveCfg(C);render();};
 }
@@ -506,22 +506,22 @@ function renderWidget() {
   const app=document.getElementById('app');
   app.innerHTML=`
     <div class="wg" id="wRoot">
-      <button class="w-rf" id="rfBtn" title="새로고침">
+      <button class="w-rf" id="rfBtn" title="Refresh">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
       </button>
       <div class="w-top"><div class="w-cw" id="clkA"></div></div>
       <div class="w-mr" id="moodR"></div>
       <div class="w-tg">
         <div class="w-tr" id="tgMP"><span class="w-tl">Morning Page</span><div class="w-tt" id="tkMP"><span class="w-th off" id="thMP"></span></div></div>
-        <div class="w-tr" id="tgGD"><span class="w-tl">감사일기</span><div class="w-tt" id="tkGD"><span class="w-th off" id="thGD"></span></div></div>
+        <div class="w-tr" id="tgGD"><span class="w-tl">Daily Diary</span><div class="w-tt" id="tkGD"><span class="w-th off" id="thGD"></span></div></div>
       </div>
       <button class="w-gen" id="genBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span id="genLabel">이번 달 페이지 일괄 생성</span>
+        <span id="genLabel">Generate this month's pages</span>
       </button>
     </div>
-    <span class="w-sl" id="setLink">설정 변경</span>
-    <div class="embed-box" id="embedBox" title="클릭하여 임베드 URL 복사">${getEmbedUrl()}</div>`;
+    <span class="w-sl" id="setLink">Settings</span>
+    <div class="embed-box" id="embedBox" title="Click to copy embed URL">${getEmbedUrl()}</div>`;
 
   renderClock();
   renderMoods();
@@ -533,7 +533,7 @@ function renderWidget() {
   document.getElementById('rfBtn').onclick=function(){this.classList.add('spin');setTimeout(()=>this.classList.remove('spin'),600);fetchWeather();chkToday();};
   document.getElementById('genBtn').onclick=generateMonth;
   document.getElementById('embedBox').onclick=function(){
-    navigator.clipboard.writeText(getEmbedUrl()).then(()=>{this.textContent='URL 복사 완료!';setTimeout(()=>{this.textContent=getEmbedUrl();},1500);});
+    navigator.clipboard.writeText(getEmbedUrl()).then(()=>{this.textContent='URL copied!';setTimeout(()=>{this.textContent=getEmbedUrl();},1500);});
   };
 }
 
@@ -591,7 +591,7 @@ function renderClock() {
 }
 
 function renderMoods() {
-  const moods=[{e:'😊',l:'좋음',m:'😊 좋음'},{e:'✦',l:'평온',m:'😐 보통'},{e:'☁',l:'흐림',m:'😔 나쁨'}];
+  const moods=[{e:'😊',l:'Good',m:'😊 Good'},{e:'✦',l:'Calm',m:'😐 Okay'},{e:'☁',l:'Cloudy',m:'😔 Bad'}];
   const row=document.getElementById('moodR');if(!row)return;
   row.innerHTML=moods.map(m=>`<button class="w-mb ${C.mood===m.m?'act':''}" data-m="${m.m}" title="${m.l}">${m.e}</button>`).join('');
   row.querySelectorAll('.w-mb').forEach(b=>{b.onclick=function(){
@@ -623,8 +623,8 @@ async function fetchWeather() {
     if(!r.ok)throw 0;
     const d=await r.json();
     ico.textContent=d.icon||'☀️';
-    tip.innerHTML=`<div class="tp">${d.temp}°C ${d.icon}</div><div class="dl">체감 ${d.feelsLike}°C<br>습도 ${d.humidity}%<br>${d.weatherDesc}</div>`;
-  }catch(e){ico.textContent='🌤️';tip.innerHTML=`<div class="dl">날씨 정보 불가</div>`;}
+    tip.innerHTML=`<div class="tp">${d.temp}°C ${d.icon}</div><div class="dl">Feels like ${d.feelsLike}°C<br>Humidity ${d.humidity}%<br>${d.weatherDesc}</div>`;
+  }catch(e){ico.textContent='🌤️';tip.innerHTML=`<div class="dl">Weather unavailable</div>`;}
 }
 
 // ── Today's status ──
@@ -644,10 +644,10 @@ async function chkToday() {
 
 // ── Generate Month Pages ──
 async function generateMonth() {
-  if(!C.nc||!C.cid){alert('Notion 연결이 필요합니다. 설정에서 연동하세요.');return;}
-  if(!C.mpDb||!C.gdDb){alert('DB가 설정되지 않았습니다. 설정에서 DB를 생성하세요.');return;}
+  if(!C.nc||!C.cid){alert('Notion connection required. Please connect in Settings.');return;}
+  if(!C.mpDb||!C.gdDb){alert('Databases not configured. Create them in Settings.');return;}
   const btn=document.getElementById('genBtn'),lbl=document.getElementById('genLabel');
-  btn.classList.add('loading');lbl.textContent='생성 중...';
+  btn.classList.add('loading');lbl.textContent='Generating...';
   try{
     // Generate for both databases
     const [mpR,gdR]=await Promise.all([
@@ -657,12 +657,12 @@ async function generateMonth() {
     const mpD=await mpR.json(), gdD=await gdR.json();
     const total=(mpD.created||0)+(gdD.created||0);
     const skipped=(mpD.skipped||0)+(gdD.skipped||0);
-    lbl.textContent=`완료! ${total}개 생성, ${skipped}개 이미 존재`;
-    setTimeout(()=>{lbl.textContent='이번 달 페이지 일괄 생성';btn.classList.remove('loading');},3000);
+    lbl.textContent=`Done! ${total} created, ${skipped} already exist`;
+    setTimeout(()=>{lbl.textContent="Generate this month's pages";btn.classList.remove('loading');},3000);
     chkToday();
   }catch(e){
-    lbl.textContent='생성 실패';btn.classList.remove('loading');
-    setTimeout(()=>{lbl.textContent='이번 달 페이지 일괄 생성';},2000);
+    lbl.textContent='Generation failed';btn.classList.remove('loading');
+    setTimeout(()=>{lbl.textContent="Generate this month's pages";},2000);
   }
 }
 
@@ -677,7 +677,7 @@ function openMP() {
   document.getElementById('mpCancel').onclick=()=>modal.classList.remove('show');
   document.getElementById('mpSave').onclick=async()=>{
     const txt=document.getElementById('mpText').value.trim();
-    if(!txt){alert('내용을 입력해주세요.');return;}
+    if(!txt){alert('Please enter some content.');return;}
     if(C.nc&&C.mpDb){
       try{
         const r=await apiJson('/api/morning-page',{databaseId:C.mpDb,content:txt,mood:selMood,pageId:todayPageIds.mp||undefined});
@@ -686,8 +686,8 @@ function openMP() {
           if(d.pageId)todayPageIds.mp=d.pageId;
           setTog('tkMP','thMP',true);modal.classList.remove('show');document.getElementById('mpText').value='';
           if(selMood){C.mood=selMood;saveCfg(C);renderMoods();}
-        }else{alert('저장 실패: '+(d.error||''));}
-      }catch(e){alert('서버 오류');}
+        }else{alert('Save failed: '+(d.error||''));}
+      }catch(e){alert('Server error');}
     }else{
       const k=`mp-${new Date().toISOString().split('T')[0]}`;
       localStorage.setItem(k,JSON.stringify({content:txt,mood:selMood,ts:Date.now()}));
@@ -701,7 +701,7 @@ function openGD() {
   document.getElementById('gdCancel').onclick=()=>modal.classList.remove('show');
   document.getElementById('gdSave').onclick=async()=>{
     const v1=document.getElementById('g1').value.trim(),v2=document.getElementById('g2').value.trim(),v3=document.getElementById('g3').value.trim();
-    if(!v1&&!v2&&!v3){alert('하나 이상 입력해주세요.');return;}
+    if(!v1&&!v2&&!v3){alert('Please enter at least one item.');return;}
     if(C.nc&&C.gdDb){
       try{
         const r=await apiJson('/api/gratitude',{databaseId:C.gdDb,gratitude1:v1,gratitude2:v2,gratitude3:v3,pageId:todayPageIds.gd||undefined});
@@ -710,8 +710,8 @@ function openGD() {
           if(d.pageId)todayPageIds.gd=d.pageId;
           setTog('tkGD','thGD',true);modal.classList.remove('show');
           document.getElementById('g1').value='';document.getElementById('g2').value='';document.getElementById('g3').value='';
-        }else{alert('저장 실패: '+(d.error||''));}
-      }catch(e){alert('서버 오류');}
+        }else{alert('Save failed: '+(d.error||''));}
+      }catch(e){alert('Server error');}
     }else{
       const k=`gd-${new Date().toISOString().split('T')[0]}`;
       localStorage.setItem(k,JSON.stringify({g1:v1,g2:v2,g3:v3,ts:Date.now()}));
