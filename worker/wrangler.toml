@@ -1,0 +1,7 @@
+name = "ritual-tracker-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# After deploying, set secrets:
+#   npx wrangler secret put NOTION_CLIENT_ID
+#   npx wrangler secret put NOTION_CLIENT_SECRET

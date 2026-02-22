@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ritual Tracker</title>
+  <style>
+    :root {
+      --neu-bg: #E8ECEF;
+      --neu-light: #ffffff;
+      --neu-dark: #a3b1c6;
+      --neu-shadow: 9px 9px 16px rgba(163,177,198,0.6), -9px -9px 16px rgba(255,255,255,0.5);
+      --neu-shadow-sm: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(255,255,255,0.5);
+      --neu-shadow-xs: 3px 3px 6px rgba(163,177,198,0.45), -3px -3px 6px rgba(255,255,255,0.45);
+      --neu-inset: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(255,255,255,0.6);
+      --neu-inset-sm: inset 2px 2px 5px rgba(163,177,198,0.4), inset -2px -2px 5px rgba(255,255,255,0.5);
+      --text-primary: #3a4556;
+      --text-secondary: #6b7a8d;
+      --text-muted: #8895a7;
+      --accent: #a8c5a0;
+      --accent-dark: #7da876;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Pro Display", "Inter", sans-serif;
+    }
+
+    * { box-sizing: border-box; font-family: var(--font-family); letter-spacing: -0.01em; margin: 0; padding: 0; }
+    html, body { margin: 0; padding: 0; }
+    html { background: var(--neu-bg); }
+    body {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--neu-bg); padding: 20px; transition: background 0.3s;
+    }
+
+    /* ========== Layout ========== */
+    .main-container {
+      display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 40px;
+      width: 100%; max-width: 860px;
+    }
+    @media (max-width: 760px), (max-aspect-ratio: 4/5) {
+      .main-container { flex-direction: column; gap: 25px; }
+    }
+
+    /* ========== Onboarding Window ========== */
+    .window {
+      width: 100%; max-width: 420px; background: var(--neu-bg); border-radius: 24px;
+      box-shadow: var(--neu-shadow); overflow: hidden; display: flex; flex-direction: column;
+      z-index: 10; flex-shrink: 0;
+    }
+    .window.hidden { display: none; }
+    .title-bar {
+      height: 54px; background: var(--neu-bg); display: flex; align-items: center; padding: 0 18px;
+      border-bottom: 1px solid rgba(163,177,198,0.25);
+    }
+    .dots { display: flex; gap: 7px; flex: 1; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1), 1px 1px 2px rgba(255,255,255,0.5); }
+    .dot.red { background: #d4a0a0; } .dot.yellow { background: #d4d4a0; } .dot.green { background: #a0c8a0; }
+    .bar-title { font-size: 13px; font-weight: 700; color: var(--text-primary); flex: 2; text-align: center; letter-spacing: 0.05em; }
+    .nav-controls { flex: 1; display: flex; justify-content: flex-end; gap: 10px; }
+
+    .content { padding: 30px 25px; min-height: 300px; position: relative; overflow-y: auto; }
+    .step { display: none; animation: fadeUp 0.3s ease; }
+    .step.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .content h1 { font-size: 20px; font-weight: 800; margin: 0 0 8px; color: var(--text-primary); }
+    .content p { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
+
+    /* ========== Form Elements ========== */
+    .label-text { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
+    input[type="text"], input[type="url"], input[type="password"], select {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: none;
+      background: var(--neu-bg); outline: none; font-size: 13px; margin-bottom: 12px;
+      color: var(--text-primary); box-shadow: var(--neu-inset-sm);
+      -webkit-appearance: none; appearance: none; transition: all 0.3s ease;
+    }
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7a8d' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+    }
+    input[type="text"]:focus, input[type="url"]:focus, input[type="password"]:focus, select:focus {
+      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
+    }
+    input::placeholder { color: #9ba8b8; }
+    input[type="color"] {
+      width: 100%; height: 42px; border: none; padding: 4px; cursor: pointer;
+      border-radius: 12px; background: var(--neu-bg); box-shadow: var(--neu-shadow-sm);
+      -webkit-appearance: none; appearance: none; margin-bottom: 12px;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 8px; }
+
+    .neu-check-label {
+      display: flex; align-items: center; gap: 8px; font-size: 12px;
+      color: var(--text-secondary); margin-bottom: 12px; cursor: pointer;
+    }
+    input[type="checkbox"] {
+      -webkit-appearance: none; appearance: none;
+      width: 18px !important; height: 18px !important; border-radius: 6px; cursor: pointer;
+      background: var(--neu-bg); border: none; position: relative;
+      box-shadow: var(--neu-inset-sm); transition: all 0.2s ease; flex-shrink: 0; padding: 0 !important; margin: 0 !important;
+    }
+    input[type="checkbox"]:checked { box-shadow: var(--neu-inset); }
+    input[type="checkbox"]:checked::after {
+      content: '\2713'; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); font-size: 11px; font-weight: 700; color: var(--text-primary);
+    }
+
+    /* Nav & Action Buttons */
+    .nav-btn {
+      background: var(--neu-bg); border: none; cursor: pointer; color: var(--text-primary);
+      transition: all 0.2s ease; padding: 7px; display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; box-shadow: var(--neu-shadow-xs);
+    }
+    .nav-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .nav-btn:active { box-shadow: var(--neu-inset-sm); }
+    .nav-btn:disabled { opacity: 0.25; cursor: default; box-shadow: none; }
+
+    .apply-btn {
+      width: 100%; padding: 13px 16px; border-radius: 14px; border: none;
+      cursor: pointer; font-size: 13px; font-weight: 700; color: #fff;
+      background: var(--accent); box-shadow: var(--neu-shadow-xs);
+      margin-top: 10px; transition: all 0.2s;
+    }
+    .apply-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .apply-btn:active { box-shadow: var(--neu-inset-sm); }
+
+    /* Radio-style selector row */
+    .option-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .option-card {
+      flex: 1; padding: 14px 10px; border-radius: 14px; border: none; cursor: pointer;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: var(--text-secondary); transition: all 0.2s;
+    }
+    .option-card:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .option-card.selected { box-shadow: var(--neu-inset); color: var(--text-primary); }
+    .option-card .option-icon { font-size: 22px; }
+
+    /* ========== Widget ========== */
+    .widget-frame {
+      width: 320px; background: var(--neu-bg); border-radius: 32px;
+      box-shadow: var(--neu-shadow); overflow: visible;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 28px 24px 22px; position: relative; flex-shrink: 0;
+      transition: all 0.5s ease;
+    }
+
+    /* Clock Circle */
+    .clock-wrap {
+      position: relative; width: 160px; height: 160px; margin-bottom: 8px;
+    }
+    .clock-ring-bg {
+      position: absolute; inset: 0; border-radius: 50%;
+      box-shadow: var(--neu-shadow); background: var(--neu-bg);
+    }
+    .clock-svg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      transform: rotate(-90deg); z-index: 2;
+    }
+    .clock-inner {
+      position: absolute; inset: 12px; border-radius: 50%;
+      background: var(--neu-bg);
+      box-shadow: var(--neu-inset);
+      display: flex; align-items: center; justify-content: center; z-index: 3;
+    }
+    .clock-time {
+      font-size: 32px; font-weight: 700; color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+    /* Analog clock */
+    .analog-face { position: relative; width: 100%; height: 100%; }
+    .analog-face .hand {
+      position: absolute; bottom: 50%; left: 50%; transform-origin: bottom center;
+      border-radius: 2px;
+    }
+    .analog-face .hour-hand { width: 3px; height: 28px; background: var(--text-primary); margin-left: -1.5px; }
+    .analog-face .min-hand { width: 2px; height: 38px; background: var(--text-secondary); margin-left: -1px; }
+    .analog-face .sec-hand { width: 1px; height: 42px; background: var(--accent); margin-left: -0.5px; }
+    .analog-face .center-dot {
+      position: absolute; top: 50%; left: 50%; width: 6px; height: 6px;
+      background: var(--text-primary); border-radius: 50%; transform: translate(-50%, -50%);
+    }
+    .analog-face .tick {
+      position: absolute; top: 6px; left: 50%; width: 1.5px; transform-origin: bottom center;
+      background: var(--text-muted); border-radius: 1px;
+    }
+
+    /* Weather badge - below clock, no overlap */
+    .weather-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-bottom: 18px; padding: 8px 16px;
+      border-radius: 12px; background: var(--neu-bg);
+      box-shadow: var(--neu-shadow-xs);
+      cursor: default; position: relative;
+    }
+    .weather-row svg { flex-shrink: 0; }
+    .weather-temp {
+      font-size: 12px; font-weight: 700; color: var(--text-primary);
+    }
+    .weather-city {
+      font-size: 10px; color: var(--text-muted); font-weight: 600;
+    }
+    .weather-tooltip {
+      position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(3px);
+      background: rgba(58,69,86,0.88); color: #E8ECEF; padding: 7px 12px;
+      border-radius: 10px; font-size: 11px; font-weight: 600;
+      white-space: nowrap; opacity: 0; pointer-events: none;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      box-shadow: 3px 3px 8px rgba(163,177,198,0.4);
+      transition: opacity 0.25s, transform 0.25s; z-index: 10;
+    }
+    .weather-row:hover .weather-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Icon buttons row */
+    .icon-row { display: flex; gap: 14px; margin-bottom: 22px; }
+    .icon-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s;
+      color: var(--text-secondary);
+    }
+    .icon-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .icon-btn:active, .icon-btn.pressed {
+      box-shadow: var(--neu-inset-sm); transform: scale(0.95);
+    }
+    .icon-btn.active {
+      background: var(--accent); color: #fff;
+      box-shadow: 2px 2px 5px rgba(120,160,110,0.4), -2px -2px 5px rgba(255,255,255,0.4);
+    }
+    .icon-btn svg { pointer-events: none; }
+
+    /* Toggle rows */
+    .toggle-row {
+      width: 100%; display: flex; align-items: center;
+      padding: 12px 18px; border-radius: 16px;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      margin-bottom: 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .toggle-row:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .toggle-row:active { box-shadow: var(--neu-inset-sm); }
+    .toggle-label { flex: 1; font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .toggle-track {
+      width: 44px; height: 24px; border-radius: 999px; position: relative;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      transition: background 0.3s; flex-shrink: 0;
+    }
+    .toggle-track.on { background: var(--accent); }
+    .toggle-thumb {
+      position: absolute; top: 2px; width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; box-shadow: var(--neu-shadow-xs);
+      transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toggle-thumb.off { left: 2px; }
+    .toggle-thumb.on { left: 22px; }
+
+    /* Refresh button - top right (replaces gear) */
+    .refresh-btn {
+      position: absolute; top: 12px; right: 14px; z-index: 5;
+      width: 28px; height: 28px; border-radius: 8px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+      color: var(--text-muted);
+    }
+    .refresh-btn:hover { color: var(--text-primary); box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .refresh-btn:active { box-shadow: var(--neu-inset-sm); }
+    .settings-btn {
+      position: absolute; top: 12px; right: 48px; z-index: 5;
+      width: 28px; height: 28px; border-radius: 8px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+      color: var(--text-muted);
+    }
+    .settings-btn:hover { color: var(--text-primary); box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .settings-btn:active { box-shadow: var(--neu-inset-sm); }
+    /* Settings panel */
+    .settings-panel {
+      position: absolute; top: 46px; right: 14px; z-index: 20;
+      width: 240px; padding: 16px; border-radius: 16px;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow);
+      display: none;
+    }
+    .settings-panel.open { display: block; }
+    .settings-panel .label-text { font-size: 10px; margin-bottom: 4px; }
+    .settings-panel input[type="url"] {
+      font-size: 12px; padding: 8px 10px; border-radius: 8px; margin-bottom: 8px;
+    }
+    .settings-panel .settings-save-btn {
+      width: 100%; padding: 8px; border-radius: 10px; border: none;
+      cursor: pointer; font-size: 12px; font-weight: 700; color: #fff;
+      background: var(--accent); box-shadow: var(--neu-shadow-xs);
+      transition: all 0.2s;
+    }
+    .settings-panel .settings-save-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    @keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .refresh-btn.spinning svg { animation: spinOnce 0.5s ease-out forwards; }
+
+    /* ========== Modal ========== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(58,69,86,0.35);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      width: 90%; max-width: 400px; background: var(--neu-bg); border-radius: 24px;
+      box-shadow: var(--neu-shadow); padding: 28px 24px;
+      transform: translateY(10px); transition: transform 0.3s;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-box h2 { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
+    .modal-box .modal-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+    .modal-box textarea {
+      width: 100%; padding: 14px; border-radius: 14px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      font-size: 13px; color: var(--text-primary); resize: none;
+      outline: none; min-height: 120px; line-height: 1.6;
+      font-family: var(--font-family);
+    }
+    .modal-box textarea::placeholder { color: #9ba8b8; }
+    .modal-box textarea:focus {
+      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .modal-btn {
+      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 700; transition: all 0.2s;
+    }
+    .modal-btn.cancel {
+      background: var(--neu-bg); color: var(--text-secondary);
+      box-shadow: var(--neu-shadow-xs);
+    }
+    .modal-btn.cancel:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .modal-btn.save {
+      background: var(--accent); color: #fff;
+      box-shadow: var(--neu-shadow-xs);
+    }
+    .modal-btn.save:hover { box-shadow: 2px 2px 4px rgba(120,160,110,0.5), -2px -2px 4px rgba(255,255,255,0.4); }
+
+    /* Mood selector in modal */
+    .mood-row { display: flex; gap: 12px; margin-bottom: 16px; justify-content: center; }
+    .mood-btn {
+      width: 40px; height: 40px; border-radius: 50%; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); flex-shrink: 0;
+    }
+    .mood-btn:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .mood-btn.selected { box-shadow: var(--neu-inset); background: var(--accent); color: #fff; }
+
+    /* Gratitude list */
+    .gratitude-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .gratitude-item { display: flex; gap: 8px; align-items: center; }
+    .gratitude-item input {
+      flex: 1; padding: 10px 12px; border-radius: 10px; border: none;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      font-size: 13px; color: var(--text-primary); outline: none;
+    }
+    .gratitude-item input:focus {
+      box-shadow: inset 3px 3px 6px rgba(163,177,198,0.55), inset -3px -3px 6px rgba(255,255,255,0.65);
+    }
+    .gratitude-num {
+      width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+      color: #fff; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+      background: var(--text-primary); color: var(--neu-bg); padding: 14px 28px; border-radius: 16px;
+      font-size: 14px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 200;
+      box-shadow: var(--neu-shadow);
+    }
+    #toast.show { bottom: 40px; }
+
+    /* Diary date selector */
+    .diary-date-row {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
+    .diary-date-option {
+      flex: 1; display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-radius: 12px; cursor: pointer;
+      background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);
+      font-size: 12px; font-weight: 600; color: var(--text-secondary);
+      transition: all 0.2s; border: none;
+    }
+    .diary-date-option:hover { box-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.5); }
+    .diary-date-option.selected { box-shadow: var(--neu-inset); color: var(--text-primary); }
+    .diary-date-option .date-check {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--neu-bg); box-shadow: var(--neu-inset-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .diary-date-option.selected .date-check {
+      background: var(--accent); box-shadow: none;
+    }
+    .diary-date-option.selected .date-check::after {
+      content: '\2713'; font-size: 10px; font-weight: 700; color: #fff;
+    }
+
+    /* Date info */
+    .date-info {
+      font-size: 11px; color: var(--text-muted); font-weight: 600;
+      margin-bottom: 4px; letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-container">
+  <!-- ===== Onboarding Window ===== -->
+  <div class="window" id="onboardingWindow">
+    <div class="title-bar">
+      <div class="dots">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+      </div>
+      <div class="bar-title">Ritual Tracker</div>
+      <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" onclick="moveStep(-1)" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="nav-btn" id="nextBtn" onclick="moveStep(1)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- Step 1: Location -->
+      <div class="step active" id="step1">
+        <h1>Your Location</h1>
+        <p>Select your region and city. This determines the timezone and weather for your widget.</p>
+        <label class="label-text">Region</label>
+        <select id="regionSelect" onchange="onRegionChange()">
+          <option value="Korea">Korea</option>
+          <option value="Asia">Asia</option>
+          <option value="Europe">Europe</option>
+          <option value="Americas">Americas</option>
+          <option value="Africa">Africa</option>
+          <option value="Oceania">Oceania</option>
+        </select>
+        <label class="label-text">City</label>
+        <select id="citySelect" onchange="onCityChange()"></select>
+        <div style="margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm);">
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Preview</div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="previewWeather" style="display: flex; align-items: center; color: var(--text-secondary);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+            </span>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);" id="previewTime">--:--</div>
+              <div style="font-size: 11px; color: var(--text-muted);" id="previewCity">Seoul</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Clock & Display -->
+      <div class="step" id="step2">
+        <h1>Clock & Shortcuts</h1>
+        <p>Choose your clock style, accent color, and optional shortcut links for the icon buttons.</p>
+        <label class="label-text">Clock Type</label>
+        <div class="option-row">
+          <button class="option-card selected" id="optDigital" onclick="selectClock('digital')">
+            <span class="option-icon" style="font-size: 18px; font-weight: 700; color: var(--text-primary);">07:30</span>
+            Digital
+          </button>
+          <button class="option-card" id="optAnalog" onclick="selectClock('analog')">
+            <span class="option-icon" style="display: flex; align-items: center; justify-content: center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </span>
+            Analog
+          </button>
+        </div>
+        <label class="label-text">Background Color</label>
+        <input type="color" id="bgColorPicker" value="#E8ECEF" oninput="onBgColorChange()">
+        <label class="label-text">Text & Icon Color</label>
+        <div style="display: flex; gap: 8px; align-items: stretch; margin-bottom: 12px;">
+          <input type="color" id="textColorPicker" value="#3a4556" oninput="onTextColorChange()" style="flex: 1; height: 42px; margin-bottom: 0;">
+          <button class="nav-btn" onclick="applyRecommendedText()" style="padding: 8px 14px; border-radius: 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); white-space: nowrap; letter-spacing: 0.03em;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="margin-right: 4px;"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+            Auto
+          </button>
+        </div>
+        <label class="label-text">Accent Color</label>
+        <input type="color" id="accentColorPicker" value="#a8c5a0" oninput="onAccentChange()">
+        <label class="label-text">Toggle Labels</label>
+        <input type="text" id="label1Input" value="Morning Page" placeholder="First toggle label" oninput="document.getElementById('toggleLabel0').textContent=this.value||'Morning Page'">
+        <input type="text" id="label2Input" value="Daily Diary" placeholder="Second toggle label" oninput="document.getElementById('toggleLabel1').textContent=this.value||'Daily Diary'">
+        <label class="label-text" style="margin-top: 6px;">Shortcut Links (optional)</label>
+        <input type="url" id="link1Input" placeholder="https://... (Button 2)" style="margin-bottom: 8px;">
+        <input type="url" id="link2Input" placeholder="https://... (Button 3)">
+      </div>
+
+      <!-- Step 3: Notion Integration (API Key) -->
+      <div class="step" id="step3">
+        <h1>Connect Notion</h1>
+        <p>Internal Integration 토큰을 입력하면 데이터베이스 목록을 불러옵니다.</p>
+
+        <div id="notionStep3a">
+          <label class="label-text">Notion API Token</label>
+          <input type="password" id="notionTokenInput" placeholder="ntn_...">
+          <div style="margin-bottom: 10px;"><a href="https://www.notion.so/my-integrations" target="_blank" style="font-size: 12px; color: var(--text-muted); text-decoration: none;">내 인테그레이션 바로가기 ↗</a></div>
+          <button class="apply-btn" id="notionLoadDbBtn" onclick="loadDatabases()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 100 100" fill="none"><path d="M6.017 4.313l55.333-4.087c6.797-.583 8.543-.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277-1.553 6.807-6.99 7.193L24.467 99.967c-4.08.193-6.023-.39-8.16-3.113L3.3 79.94c-2.333-3.113-3.3-5.443-3.3-8.167V11.113c0-3.497 1.553-6.413 6.017-6.8z" fill="#e8ecef"/><path d="M61.35.227L6.017 4.313C1.553 4.7 0 7.617 0 11.113v60.66c0 2.723.967 5.053 3.3 8.167l12.007 16.913c2.137 2.723 4.08 3.307 8.16 3.113l64.257-3.89c5.437-.387 6.99-2.917 6.99-7.193V20.64c0-2.21-.86-2.8-3.467-4.72l-.416-.333-17.663-12.443C69.893.037 68.147-.357 61.35.227zM25.92 19.523c-5.247.353-6.437.433-9.417-1.99L8.927 11.507c-.78-.78-.39-1.753 1.163-1.95l52.833-3.887c4.673-.39 7.003 1.17 8.753 2.527l8.94 6.5c.39.193 1.36 1.36.193 1.36l-54.5 3.27-.39.197zm-3.3 69.93V30.407c0-2.527.78-3.697 3.103-3.893l58.937-3.5c2.14-.193 3.107 1.163 3.107 3.693v58.657c0 2.53-.39 4.67-3.883 4.863l-56.403 3.313c-3.497.193-4.86-.973-4.86-3.897zm55.633-57.11c.39 1.557 0 3.113-1.557 3.307l-2.723.583v43.34c-2.333 1.363-4.473 2.14-6.22 2.14-2.917 0-3.69-.973-5.833-3.5l-17.86-28.09v27.12l5.64 1.167s0 3.113-4.277 3.113L33.3 83.14c-.39-.78 0-2.723 1.357-3.11l3.5-.973V43.727L33.3 43.34c-.39-1.557.583-3.89 3.3-4.08l14.163-.973 18.637 28.467V41.587l-4.667-.583c-.39-1.943 1.163-3.5 3.107-3.693l14.413-.967z" fill="#5a6e7f"/></svg>
+            Load Databases
+          </button>
+        </div>
+
+        <div id="notionStep3b" style="display: none;">
+          <div style="padding: 12px; border-radius: 14px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm); margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent);"></div>
+              <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Connected</span>
+            </div>
+          </div>
+          <label class="label-text">Database</label>
+          <select id="notionDbSelect" style="margin-bottom: 12px;" onchange="onDbSelectChange()"></select>
+        </div>
+      </div>
+
+      <!-- Step 4: Embed Link -->
+      <div class="step" id="step4">
+        <h1>Embed Widget</h1>
+        <p>Paste this link into a Notion <strong>/embed</strong> block to add the widget to your page.</p>
+
+        <div style="padding: 16px; border-radius: 16px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm); margin-bottom: 16px;">
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Embed URL</div>
+          <div id="embedLinkDisplay" style="font-size: 12px; color: var(--text-primary); word-break: break-all; line-height: 1.6; font-family: monospace; padding: 10px; border-radius: 10px; background: var(--neu-bg); box-shadow: var(--neu-shadow-xs);"></div>
+        </div>
+
+        <button class="apply-btn" onclick="copyEmbedLink()" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Link
+        </button>
+
+        <div style="padding: 14px; border-radius: 14px; background: var(--neu-bg); box-shadow: var(--neu-shadow-xs); margin-bottom: 16px;">
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7;">
+            <strong style="color: var(--text-primary);">How to embed:</strong><br>
+            1. Open your Notion page<br>
+            2. Type <code style="padding: 2px 6px; border-radius: 4px; background: var(--neu-bg); box-shadow: var(--neu-inset-sm); font-size: 11px;">/embed</code> and press Enter<br>
+            3. Paste the URL above and click "Embed link"<br>
+            4. Resize the block to fit your layout
+          </div>
+        </div>
+
+        <button class="apply-btn" onclick="finishOnboarding()" style="width: 100%;">Launch Widget</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== Widget ===== -->
+  <div class="widget-frame" id="widgetFrame">
+    <!-- Settings button -->
+    <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <!-- Settings panel -->
+    <div class="settings-panel" id="settingsPanel">
+      <label class="label-text">Shortcut Link 1 (Star)</label>
+      <input type="url" id="settingsLink1" placeholder="https://...">
+      <label class="label-text">Shortcut Link 2 (Music)</label>
+      <input type="url" id="settingsLink2" placeholder="https://...">
+      <button class="settings-save-btn" onclick="saveSettings()">Save</button>
+    </div>
+    <!-- Refresh button (top-right) -->
+    <button class="refresh-btn" id="refreshBtn" onclick="refreshWidget()" title="Refresh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.34 13.72A9 9 0 1 1 18.57 5.16L21.5 8"/></svg>
+    </button>
+
+    <div class="date-info" id="dateInfo"></div>
+
+    <!-- Clock -->
+    <div class="clock-wrap" id="clockWrap">
+      <div class="clock-ring-bg"></div>
+      <svg class="clock-svg" viewBox="0 0 160 160">
+        <circle id="ringBg" cx="80" cy="80" r="72" fill="none" stroke="rgba(163,177,198,0.2)" stroke-width="10" />
+        <circle id="progressRing" cx="80" cy="80" r="72" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="452.39" stroke-dashoffset="452.39" />
+      </svg>
+      <div class="clock-inner" id="clockInner">
+        <span class="clock-time" id="clockTime">07:30</span>
+      </div>
+    </div>
+
+    <!-- Weather row (below clock, no overlap) -->
+    <div class="weather-row" id="weatherRow">
+      <span id="weatherIcon" style="display: flex; align-items: center; color: var(--text-secondary);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+      </span>
+      <span class="weather-temp" id="weatherTemp">--</span>
+      <span class="weather-city" id="weatherCity"></span>
+      <div class="weather-tooltip" id="weatherTooltip">Loading...</div>
+    </div>
+
+    <!-- Icon buttons: 1=mood, 2=link, 3=link -->
+    <div class="icon-row">
+      <button class="icon-btn" id="iconBtn0" onclick="clickMoodIcon()" title="Today's Mood">
+        <svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="iconBtn1" onclick="clickLinkIcon(0)" title="Shortcut 1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="iconBtn2" onclick="clickLinkIcon(1)" title="Shortcut 2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Toggle rows -->
+    <div class="toggle-row" id="toggleRow0" onclick="openModal(0)">
+      <span class="toggle-label" id="toggleLabel0">Morning Page</span>
+      <div class="toggle-track" id="toggleTrack0">
+        <div class="toggle-thumb off" id="toggleThumb0"></div>
+      </div>
+    </div>
+    <div class="toggle-row" id="toggleRow1" onclick="openModal(1)">
+      <span class="toggle-label" id="toggleLabel1">Daily Diary</span>
+      <div class="toggle-track" id="toggleTrack1">
+        <div class="toggle-thumb off" id="toggleThumb1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modals ===== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <!-- Morning Page Modal -->
+  <div class="modal-box" id="modalMorning" style="display:none;">
+    <h2>Morning Page</h2>
+    <div class="modal-sub">Write freely. No rules, no judgment.</div>
+    <textarea id="morningText" placeholder="Start writing your thoughts..."></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn save" onclick="saveMorning()">Save</button>
+    </div>
+  </div>
+
+  <!-- Daily Diary (Gratitude) Modal -->
+  <div class="modal-box" id="modalDiary" style="display:none;">
+    <h2>Daily Diary</h2>
+    <div class="modal-sub">Write down 3 things you're grateful for today.</div>
+    <label class="label-text">Save to date</label>
+    <div class="diary-date-row" id="diaryDateRow">
+      <button class="diary-date-option selected" id="diaryDateToday" onclick="selectDiaryDate('today')">
+        <span class="date-check"></span>
+        <span id="diaryDateTodayLabel">Today</span>
+      </button>
+      <button class="diary-date-option" id="diaryDateYesterday" onclick="selectDiaryDate('yesterday')">
+        <span class="date-check"></span>
+        <span id="diaryDateYesterdayLabel">Yesterday</span>
+      </button>
+    </div>
+    <label class="label-text">How are you feeling?</label>
+    <div class="mood-row" id="moodRow">
+      <button class="mood-btn" data-mood="great" onclick="selectMood(this)" title="Great">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="good" onclick="selectMood(this)" title="Good">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="okay" onclick="selectMood(this)" title="Okay">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="bad" onclick="selectMood(this)" title="Bad">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      </button>
+      <button class="mood-btn" data-mood="awful" onclick="selectMood(this)" title="Awful">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><path d="M17 15l-1 4"/></svg>
+      </button>
+    </div>
+    <div class="gratitude-list" id="gratitudeList">
+      <div class="gratitude-item">
+        <span class="gratitude-num">1</span>
+        <input type="text" placeholder="I'm grateful for..." id="grat0">
+      </div>
+      <div class="gratitude-item">
+        <span class="gratitude-num">2</span>
+        <input type="text" placeholder="I'm grateful for..." id="grat1">
+      </div>
+      <div class="gratitude-item">
+        <span class="gratitude-num">3</span>
+        <input type="text" placeholder="I'm grateful for..." id="grat2">
+      </div>
+    </div>
+    <label class="label-text" style="margin-top: 10px;">Anything else?</label>
+    <textarea id="diaryText" placeholder="How was your day?"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn save" onclick="saveDiary()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ===== SVG Icon Templates (Pulsar Line Style) =====
+  const SVG_WEATHER = {
+    clear: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>',
+    partly: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2v2m-6.36.64l1.42 1.42M2 12h2m2.34 5.66l-1.42 1.42M17 12a5 5 0 0 0-9.58-2"/><path d="M17.5 21H9a5 5 0 0 1-.42-9.98A7.002 7.002 0 0 1 17.5 12a4.5 4.5 0 0 1 0 9z"/></svg>',
+    cloudy: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
+    fog: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 10h18M3 14h18M5 18h14M7 6h10"/></svg>',
+    drizzle: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M8 19v2m4-2v2m4-2v2" stroke-dasharray="1 2"/></svg>',
+    rain: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M8 19v3m4-3v3m4-3v3"/></svg>',
+    snow: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M8 20l.5.5m3.5-.5l.5.5m3.5-.5l.5.5M9 18l-.5.5m5-.5l.5.5"/></svg>',
+    storm: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><path d="M13 11l-2 4h4l-2 4"/></svg>',
+    fallback: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 4v2a4 4 0 0 1-4 4H8m0 0V4m0 6v6"/><circle cx="12" cy="18" r="1"/></svg>',
+  };
+
+  const SVG_MOOD = {
+    great: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+    good: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    okay: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    bad: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    awful: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M16 16s-1.5-3-4-3-4 3-4 3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><path d="M17 15l-1 4"/></svg>',
+    none: '<svg id="moodIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  };
+
+  function getWeatherSvg(code) {
+    if (code === 0) return SVG_WEATHER.clear;
+    if (code <= 2) return SVG_WEATHER.partly;
+    if (code === 3) return SVG_WEATHER.cloudy;
+    if (code >= 45 && code <= 48) return SVG_WEATHER.fog;
+    if (code >= 51 && code <= 55) return SVG_WEATHER.drizzle;
+    if (code >= 61 && code <= 65) return SVG_WEATHER.rain;
+    if (code >= 71 && code <= 75) return SVG_WEATHER.snow;
+    if (code >= 80 && code <= 82) return SVG_WEATHER.rain;
+    if (code >= 95) return SVG_WEATHER.storm;
+    return SVG_WEATHER.fallback;
+  }
+
+  // ===== Data =====
+  const STORAGE_KEY = 'ritual-tracker-config';
+  const DATA_KEY = 'ritual-tracker-data';
+
+  const CITIES = {
+    Korea: [
+      { name: 'Seoul', tz: 'Asia/Seoul', lat: 37.57, lon: 126.98 },
+      { name: 'Busan', tz: 'Asia/Seoul', lat: 35.18, lon: 129.08 },
+      { name: 'Incheon', tz: 'Asia/Seoul', lat: 37.46, lon: 126.71 },
+      { name: 'Daegu', tz: 'Asia/Seoul', lat: 35.87, lon: 128.60 },
+      { name: 'Daejeon', tz: 'Asia/Seoul', lat: 36.35, lon: 127.38 },
+      { name: 'Gwangju', tz: 'Asia/Seoul', lat: 35.16, lon: 126.85 },
+      { name: 'Ulsan', tz: 'Asia/Seoul', lat: 35.54, lon: 129.31 },
+      { name: 'Sejong', tz: 'Asia/Seoul', lat: 36.48, lon: 127.00 },
+      { name: 'Suwon', tz: 'Asia/Seoul', lat: 37.26, lon: 127.03 },
+      { name: 'Changwon', tz: 'Asia/Seoul', lat: 35.23, lon: 128.68 },
+      { name: 'Cheongju', tz: 'Asia/Seoul', lat: 36.64, lon: 127.49 },
+      { name: 'Jeonju', tz: 'Asia/Seoul', lat: 35.82, lon: 127.15 },
+      { name: 'Chuncheon', tz: 'Asia/Seoul', lat: 37.87, lon: 127.73 },
+      { name: 'Jeju', tz: 'Asia/Seoul', lat: 33.50, lon: 126.53 },
+      { name: 'Pohang', tz: 'Asia/Seoul', lat: 36.02, lon: 129.37 },
+      { name: 'Yeosu', tz: 'Asia/Seoul', lat: 34.74, lon: 127.74 },
+      { name: 'Gangneung', tz: 'Asia/Seoul', lat: 37.75, lon: 128.90 },
+    ],
+    Asia: [
+      { name: 'Tokyo', tz: 'Asia/Tokyo', lat: 35.68, lon: 139.69 },
+      { name: 'Shanghai', tz: 'Asia/Shanghai', lat: 31.23, lon: 121.47 },
+      { name: 'Singapore', tz: 'Asia/Singapore', lat: 1.35, lon: 103.82 },
+      { name: 'Bangkok', tz: 'Asia/Bangkok', lat: 13.76, lon: 100.50 },
+      { name: 'Mumbai', tz: 'Asia/Kolkata', lat: 19.08, lon: 72.88 },
+      { name: 'Dubai', tz: 'Asia/Dubai', lat: 25.20, lon: 55.27 },
+      { name: 'Hong Kong', tz: 'Asia/Hong_Kong', lat: 22.32, lon: 114.17 },
+      { name: 'Taipei', tz: 'Asia/Taipei', lat: 25.03, lon: 121.57 },
+      { name: 'Jakarta', tz: 'Asia/Jakarta', lat: -6.21, lon: 106.85 },
+    ],
+    Europe: [
+      { name: 'London', tz: 'Europe/London', lat: 51.51, lon: -0.13 },
+      { name: 'Paris', tz: 'Europe/Paris', lat: 48.86, lon: 2.35 },
+      { name: 'Berlin', tz: 'Europe/Berlin', lat: 52.52, lon: 13.41 },
+      { name: 'Madrid', tz: 'Europe/Madrid', lat: 40.42, lon: -3.70 },
+      { name: 'Rome', tz: 'Europe/Rome', lat: 41.90, lon: 12.50 },
+      { name: 'Amsterdam', tz: 'Europe/Amsterdam', lat: 52.37, lon: 4.90 },
+      { name: 'Stockholm', tz: 'Europe/Stockholm', lat: 59.33, lon: 18.07 },
+      { name: 'Istanbul', tz: 'Europe/Istanbul', lat: 41.01, lon: 28.98 },
+    ],
+    Americas: [
+      { name: 'New York', tz: 'America/New_York', lat: 40.71, lon: -74.01 },
+      { name: 'Los Angeles', tz: 'America/Los_Angeles', lat: 34.05, lon: -118.24 },
+      { name: 'Chicago', tz: 'America/Chicago', lat: 41.88, lon: -87.63 },
+      { name: 'Toronto', tz: 'Canada/Eastern', lat: 43.65, lon: -79.38 },
+      { name: 'Mexico City', tz: 'America/Mexico_City', lat: 19.43, lon: -99.13 },
+      { name: 'Sao Paulo', tz: 'America/Sao_Paulo', lat: -23.55, lon: -46.63 },
+      { name: 'Buenos Aires', tz: 'America/Argentina/Buenos_Aires', lat: -34.60, lon: -58.38 },
+    ],
+    Africa: [
+      { name: 'Cairo', tz: 'Africa/Cairo', lat: 30.04, lon: 31.24 },
+      { name: 'Lagos', tz: 'Africa/Lagos', lat: 6.52, lon: 3.38 },
+      { name: 'Johannesburg', tz: 'Africa/Johannesburg', lat: -26.20, lon: 28.05 },
+      { name: 'Nairobi', tz: 'Africa/Nairobi', lat: -1.29, lon: 36.82 },
+      { name: 'Casablanca', tz: 'Africa/Casablanca', lat: 33.57, lon: -7.59 },
+    ],
+    Oceania: [
+      { name: 'Sydney', tz: 'Australia/Sydney', lat: -33.87, lon: 151.21 },
+      { name: 'Melbourne', tz: 'Australia/Melbourne', lat: -37.81, lon: 144.96 },
+      { name: 'Auckland', tz: 'Pacific/Auckland', lat: -36.85, lon: 174.76 },
+    ],
+  };
+
+  const PROXY_URL = 'https://ritual-tracker-uce6.onrender.com';
+
+  // ===== State =====
+  let config = loadConfig();
+  let todayData = loadTodayData();
+  let currentStep = 1;
+  let currentModal = -1;
+  let selectedMood = '';
+  let clockInterval = null;
+  let weatherCache = null;
+  let diaryDateSelection = 'today'; // 'today' or 'yesterday'
+
+  function loadConfig() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return {
+      region: 'Korea',
+      city: 'Seoul',
+      tz: 'Asia/Seoul',
+      lat: 37.57,
+      lon: 126.98,
+      clockType: 'digital',
+      bgColor: '#E8ECEF',
+      textColor: '#3a4556',
+      accent: '#a8c5a0',
+      label1: 'Morning Page',
+      label2: 'Daily Diary',
+      link1: '',
+      link2: '',
+      notion: null,
+      onboardingDone: false,
+    };
+  }
+
+  function saveConfig() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (_) {}
+  }
+
+  function todayKey() {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function yesterdayKey() {
+    const d = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatDateLabel(dateStr) {
+    const parts = dateStr.split('-');
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}`;
+  }
+
+  function loadTodayData() {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      if (raw) {
+        const all = JSON.parse(raw);
+        return all[todayKey()] || { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+      }
+    } catch (_) {}
+    return { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+  }
+
+  function saveTodayData() {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      const all = raw ? JSON.parse(raw) : {};
+      all[todayKey()] = todayData;
+      localStorage.setItem(DATA_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  function loadDataForDate(dateKey) {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      if (raw) {
+        const all = JSON.parse(raw);
+        return all[dateKey] || { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+      }
+    } catch (_) {}
+    return { morning: '', mood: '', diary: '', gratitude: ['','',''], morningDone: false, diaryDone: false };
+  }
+
+  function saveDataForDate(dateKey, data) {
+    try {
+      const raw = localStorage.getItem(DATA_KEY);
+      const all = raw ? JSON.parse(raw) : {};
+      all[dateKey] = data;
+      localStorage.setItem(DATA_KEY, JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  function selectDiaryDate(which) {
+    diaryDateSelection = which;
+    document.getElementById('diaryDateToday').classList.toggle('selected', which === 'today');
+    document.getElementById('diaryDateYesterday').classList.toggle('selected', which === 'yesterday');
+  }
+
+  // ===== Onboarding =====
+  function populateCities() {
+    const sel = document.getElementById('citySelect');
+    const cities = CITIES[config.region] || CITIES.Korea;
+    sel.innerHTML = cities.map(c => `<option value="${c.name}" ${c.name === config.city ? 'selected' : ''}>${c.name}</option>`).join('');
+    onCityChange();
+  }
+
+  function onRegionChange() {
+    config.region = document.getElementById('regionSelect').value;
+    config.city = (CITIES[config.region] || CITIES.Korea)[0].name;
+    populateCities();
+  }
+
+  function onCityChange() {
+    const cityName = document.getElementById('citySelect').value;
+    const cities = CITIES[config.region] || CITIES.Korea;
+    const c = cities.find(x => x.name === cityName) || cities[0];
+    config.city = c.name; config.tz = c.tz; config.lat = c.lat; config.lon = c.lon;
+    updatePreviewTime();
+    fetchWeatherPreview();
+  }
+
+  function updatePreviewTime() {
+    try {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { timeZone: config.tz, hour: '2-digit', minute: '2-digit', hour12: false });
+      document.getElementById('previewTime').textContent = timeStr;
+      document.getElementById('previewCity').textContent = config.city;
+    } catch (_) {
+      document.getElementById('previewTime').textContent = '--:--';
+    }
+  }
+
+  async function fetchWeatherPreview() {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${config.lat}&longitude=${config.lon}&current=temperature_2m,weather_code&timezone=auto`;
+      const res = await fetch(url);
+      const data = await res.json();
+      weatherCache = data.current;
+      const svgHtml = getWeatherSvg(data.current.weather_code);
+      const temp = Math.round(data.current.temperature_2m);
+      document.getElementById('previewWeather').innerHTML = svgHtml;
+      document.getElementById('weatherIcon').innerHTML = svgHtml;
+      document.getElementById('weatherTemp').textContent = `${temp}°C`;
+      document.getElementById('weatherCity').textContent = config.city;
+      document.getElementById('weatherTooltip').textContent = `${config.city} ${temp}°C`;
+    } catch (_) {
+      document.getElementById('previewWeather').innerHTML = SVG_WEATHER.fallback;
+    }
+  }
+
+  function selectClock(type) {
+    config.clockType = type;
+    document.getElementById('optDigital').classList.toggle('selected', type === 'digital');
+    document.getElementById('optAnalog').classList.toggle('selected', type === 'analog');
+    renderClock();
+  }
+
+  function onAccentChange() {
+    config.accent = document.getElementById('accentColorPicker').value;
+    applyAccentToTargets();
+  }
+
+  function applyAccentToTargets() {
+    [document.getElementById('widgetFrame'), document.getElementById('modalOverlay'), document.getElementById('toast')].forEach(el => {
+      if (el) el.style.setProperty('--accent', config.accent);
+    });
+  }
+
+  // ===== Dynamic Neumorphism Color Engine =====
+  // Scoped to widget-frame, modals, and toast only — onboarding window keeps default theme
+  function hexToHSL(hex) {
+    let r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+    const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max - min;
+    let h = 0, s = 0, l = (max+min)/2;
+    if (d > 0) {
+      s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+      if (max === r) h = ((g-b)/d + (g<b?6:0))/6;
+      else if (max === g) h = ((b-r)/d+2)/6;
+      else h = ((r-g)/d+4)/6;
+    }
+    return { h: h*360, s: s*100, l: l*100 };
+  }
+
+  function hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    const a = s * Math.min(l, 1-l);
+    const f = n => { const k = (n + h/30) % 12; return l - a * Math.max(Math.min(k-3, 9-k, 1), -1); };
+    const toHex = x => Math.round(x*255).toString(16).padStart(2,'0');
+    return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+  }
+
+  function hslToRgb(h, s, l) {
+    s /= 100; l /= 100;
+    const a = s * Math.min(l, 1-l);
+    const f = n => { const k = (n + h/30) % 12; return l - a * Math.max(Math.min(k-3, 9-k, 1), -1); };
+    return { r: Math.round(f(0)*255), g: Math.round(f(8)*255), b: Math.round(f(4)*255) };
+  }
+
+  function computeNeuVars(bgHex, textHex) {
+    const bg = hexToHSL(bgHex);
+    const isLight = bg.l > 50;
+    const darkL = Math.max(0, bg.l - (isLight ? 18 : 10));
+    const darkRgb = hslToRgb(bg.h, bg.s, darkL);
+    const lightL = Math.min(100, bg.l + (isLight ? 12 : 8));
+    const lightRgb = hslToRgb(bg.h, bg.s, lightL);
+    const dR = darkRgb.r, dG = darkRgb.g, dB = darkRgb.b;
+    const lR = lightRgb.r, lG = lightRgb.g, lB = lightRgb.b;
+    const txt = hexToHSL(textHex);
+    const secL = isLight ? Math.min(100, txt.l + 18) : Math.max(0, txt.l - 15);
+    const mutL = isLight ? Math.min(100, txt.l + 32) : Math.max(0, txt.l - 28);
+    return {
+      '--neu-bg': bgHex,
+      '--neu-dark': `rgb(${dR},${dG},${dB})`,
+      '--neu-light': `rgb(${lR},${lG},${lB})`,
+      '--neu-shadow': `9px 9px 16px rgba(${dR},${dG},${dB},0.6), -9px -9px 16px rgba(${lR},${lG},${lB},0.5)`,
+      '--neu-shadow-sm': `5px 5px 10px rgba(${dR},${dG},${dB},0.5), -5px -5px 10px rgba(${lR},${lG},${lB},0.5)`,
+      '--neu-shadow-xs': `3px 3px 6px rgba(${dR},${dG},${dB},0.45), -3px -3px 6px rgba(${lR},${lG},${lB},0.45)`,
+      '--neu-inset': `inset 4px 4px 8px rgba(${dR},${dG},${dB},0.5), inset -4px -4px 8px rgba(${lR},${lG},${lB},0.6)`,
+      '--neu-inset-sm': `inset 2px 2px 5px rgba(${dR},${dG},${dB},0.4), inset -2px -2px 5px rgba(${lR},${lG},${lB},0.5)`,
+      '--text-primary': textHex,
+      '--text-secondary': hslToHex(txt.h, Math.max(txt.s - 5, 0), secL),
+      '--text-muted': hslToHex(txt.h, Math.max(txt.s - 10, 0), mutL),
+    };
+  }
+
+  function applyNeuTheme(bgHex, textHex) {
+    const vars = computeNeuVars(bgHex, textHex);
+    const targets = [
+      document.getElementById('widgetFrame'),
+      document.getElementById('modalOverlay'),
+      document.getElementById('toast'),
+    ];
+    targets.forEach(el => {
+      if (!el) return;
+      Object.entries(vars).forEach(([k, v]) => el.style.setProperty(k, v));
+    });
+    // Only change body/html background when onboarding is done or in embed mode
+    const onboardingWin = document.getElementById('onboardingWindow');
+    if (!onboardingWin || onboardingWin.classList.contains('hidden')) {
+      document.documentElement.style.background = bgHex;
+      document.body.style.background = bgHex;
+    }
+    // Update ring background stroke to match theme
+    const ringBg = document.getElementById('ringBg');
+    if (ringBg) {
+      const bg = hexToHSL(bgHex);
+      const darkL = Math.max(0, bg.l - (bg.l > 50 ? 18 : 10));
+      const darkRgb = hslToRgb(bg.h, bg.s, darkL);
+      ringBg.setAttribute('stroke', `rgba(${darkRgb.r},${darkRgb.g},${darkRgb.b},0.2)`);
+    }
+  }
+
+  function recommendTextColor(bgHex) {
+    const bg = hexToHSL(bgHex);
+    if (bg.l > 55) {
+      // Light bg → dark text, keep bg hue for harmony, high saturation dampened
+      return hslToHex(bg.h, Math.min(bg.s * 0.6, 25), 22);
+    } else {
+      // Dark bg → light text, same hue family, soft
+      return hslToHex(bg.h, Math.min(bg.s * 0.3, 15), 82);
+    }
+  }
+
+
+  function applyRecommendedText() {
+    const bg = config.bgColor || '#E8ECEF';
+    const rec = recommendTextColor(bg);
+    config.textColor = rec;
+    document.getElementById('textColorPicker').value = rec;
+    applyNeuTheme(config.bgColor, config.textColor);
+  }
+
+  function onBgColorChange() {
+    config.bgColor = document.getElementById('bgColorPicker').value;
+    applyNeuTheme(config.bgColor, config.textColor);
+  }
+
+  function onTextColorChange() {
+    config.textColor = document.getElementById('textColorPicker').value;
+    applyNeuTheme(config.bgColor, config.textColor);
+  }
+
+  function moveStep(n) {
+    const nextStep = currentStep + n;
+    if (nextStep < 1 || nextStep > 4) return;
+    document.getElementById(`step${currentStep}`).classList.remove('active');
+    currentStep = nextStep;
+    document.getElementById(`step${currentStep}`).classList.add('active');
+    document.getElementById('prevBtn').disabled = (currentStep === 1);
+    if (currentStep === 4) generateEmbedLink();
+  }
+
+  async function generateEmbedLink() {
+    var display = document.getElementById('embedLinkDisplay');
+    display.textContent = 'Generating link...';
+
+    // Collect selected DB
+    var sel = document.getElementById('notionDbSelect');
+    if (sel && sel.value && config.notion) {
+      var opt = sel.options[sel.selectedIndex];
+      config.notion.databaseId = sel.value;
+      config.notion.databaseName = opt ? opt.textContent : '';
+      saveConfig();
+    }
+
+    var embedConfig = {
+      region: config.region, city: config.city, tz: config.tz,
+      lat: config.lat, lon: config.lon, clockType: config.clockType,
+      bgColor: config.bgColor, textColor: config.textColor, accent: config.accent,
+      label1: config.label1, label2: config.label2,
+      link1: config.link1, link2: config.link2,
+    };
+    if (config.notion && config.notion.accessToken) {
+      embedConfig.notion = {
+        accessToken: config.notion.accessToken,
+        databaseId: config.notion.databaseId,
+        databaseName: config.notion.databaseName,
+        titleProperty: config.notion.titleProperty || 'Name',
+      };
+    }
+
+    try {
+      var res = await fetch(PROXY_URL + '/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(embedConfig),
+      });
+      if (!res.ok) throw new Error('Server error');
+      var data = await res.json();
+      var url = window.location.origin + window.location.pathname + '?w=' + data.id;
+      display.textContent = url;
+    } catch (err) {
+      display.textContent = 'Failed to generate link.';
+      console.error(err);
+    }
+  }
+
+  function copyEmbedLink() {
+    var url = document.getElementById('embedLinkDisplay').textContent;
+    navigator.clipboard.writeText(url).then(function() {
+      showToast('Link copied!');
+    }).catch(function() {
+      var ta = document.createElement('textarea');
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Link copied!');
+    });
+  }
+
+  function finishOnboarding() {
+    config.bgColor = document.getElementById('bgColorPicker').value || '#E8ECEF';
+    config.textColor = document.getElementById('textColorPicker').value || '#3a4556';
+    config.accent = document.getElementById('accentColorPicker').value || '#a8c5a0';
+    config.label1 = document.getElementById('label1Input').value || 'Morning Page';
+    config.label2 = document.getElementById('label2Input').value || 'Daily Diary';
+    config.link1 = document.getElementById('link1Input').value || '';
+    config.link2 = document.getElementById('link2Input').value || '';
+    config.onboardingDone = true;
+    saveConfig();
+    document.getElementById('onboardingWindow').classList.add('hidden');
+    initWidget();
+    showToast('Widget is ready!');
+  }
+
+  function openOnboarding() {
+    document.getElementById('onboardingWindow').classList.remove('hidden');
+    document.getElementById('regionSelect').value = config.region;
+    populateCities();
+    // Reset widget preview to default colors
+    config.bgColor = '#E8ECEF';
+    config.textColor = '#3a4556';
+    config.accent = '#a8c5a0';
+    applyNeuTheme('#E8ECEF', '#3a4556');
+    applyAccentToTargets();
+    document.getElementById('bgColorPicker').value = '#E8ECEF';
+    document.getElementById('textColorPicker').value = '#3a4556';
+    document.getElementById('accentColorPicker').value = '#a8c5a0';
+    document.getElementById('label1Input').value = config.label1;
+    document.getElementById('label2Input').value = config.label2;
+    document.getElementById('link1Input').value = config.link1 || '';
+    document.getElementById('link2Input').value = config.link2 || '';
+    selectClock(config.clockType);
+  }
+
+  // ===== Notion API Key Connection =====
+  async function loadDatabases() {
+    var token = (document.getElementById('notionTokenInput').value || '').trim();
+    if (!token) { showToast('Please enter your API token.'); return; }
+
+    document.getElementById('notionLoadDbBtn').textContent = 'Loading...';
+    document.getElementById('notionLoadDbBtn').disabled = true;
+
+    try {
+      var res = await fetch(PROXY_URL + '/api/notion/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Notion-Token': token },
+        body: JSON.stringify({ filter: { value: 'database', property: 'object' }, page_size: 50 }),
+      });
+      if (!res.ok) throw new Error('Failed to fetch databases');
+      var data = await res.json();
+      if (!data.results || !data.results.length) throw new Error('No databases found');
+
+      var sel = document.getElementById('notionDbSelect');
+      sel.innerHTML = data.results.map(function(db) {
+        var title = (db.title && db.title[0]) ? db.title[0].plain_text : 'Untitled';
+        return '<option value="' + db.id + '">' + title + '</option>';
+      }).join('');
+
+      var firstDb = data.results[0];
+      var firstName = (firstDb.title && firstDb.title[0]) ? firstDb.title[0].plain_text : 'Untitled';
+      config.notion = { accessToken: token, databaseId: firstDb.id, databaseName: firstName };
+      saveConfig();
+
+      // Auto-setup properties for the first database
+      await setupNotionDatabase(firstDb.id);
+
+      document.getElementById('notionStep3a').style.display = 'none';
+      document.getElementById('notionStep3b').style.display = 'block';
+      showToast('Connected! Select a database.');
+    } catch (err) {
+      console.error(err);
+      showToast('Connection failed. Check your token.');
+    }
+
+    document.getElementById('notionLoadDbBtn').innerHTML = '<svg width="16" height="16" viewBox="0 0 100 100" fill="none"><path d="M6.017 4.313l55.333-4.087c6.797-.583 8.543-.19 12.817 2.917l17.663 12.443c2.913 2.14 3.883 2.723 3.883 5.053v68.243c0 4.277-1.553 6.807-6.99 7.193L24.467 99.967c-4.08.193-6.023-.39-8.16-3.113L3.3 79.94c-2.333-3.113-3.3-5.443-3.3-8.167V11.113c0-3.497 1.553-6.413 6.017-6.8z" fill="#fff"/><path d="M61.35.227L6.017 4.313C1.553 4.7 0 7.617 0 11.113v60.66c0 2.723.967 5.053 3.3 8.167l12.007 16.913c2.137 2.723 4.08 3.307 8.16 3.113l64.257-3.89c5.437-.387 6.99-2.917 6.99-7.193V20.64c0-2.21-.86-2.8-3.467-4.72l-.416-.333-17.663-12.443C69.893.037 68.147-.357 61.35.227z" fill="#000"/></svg> Load Databases';
+    document.getElementById('notionLoadDbBtn').disabled = false;
+  }
+
+  async function onDbSelectChange() {
+    var sel = document.getElementById('notionDbSelect');
+    if (sel && sel.value && config.notion) {
+      config.notion.databaseId = sel.value;
+      var opt = sel.options[sel.selectedIndex];
+      config.notion.databaseName = opt ? opt.textContent : '';
+      saveConfig();
+      await setupNotionDatabase(sel.value);
+    }
+  }
+
+  // ===== Notion API Layer =====
+  async function notionFetch(endpoint, options = {}) {
+    if (!config.notion || !config.notion.accessToken) return null;
+    try {
+      const fetchOpts = {
+        method: options.method || 'GET',
+        headers: { 'Content-Type': 'application/json', 'X-Notion-Token': config.notion.accessToken },
+      };
+      if (options.body) fetchOpts.body = JSON.stringify(options.body);
+      const res = await fetch(`${PROXY_URL}/api/notion${endpoint}`, fetchOpts);
+      if (!res.ok) throw new Error(`Notion API ${res.status}`);
+      const text = await res.text();
+      return text ? JSON.parse(text) : {};
+    } catch (err) { console.error('Notion API error:', err); return null; }
+  }
+
+  // Auto-configure database properties when a DB is selected
+  async function setupNotionDatabase(dbId) {
+    const db = await notionFetch(`/databases/${dbId}`);
+    if (!db || !db.properties) return;
+    const props = db.properties;
+    const updates = {};
+
+    // Detect the title property name (varies by language: "Name", "이름", "Title", etc.)
+    var titlePropName = 'Name';
+    for (var pName in props) {
+      if (props[pName].type === 'title') { titlePropName = pName; break; }
+    }
+    if (config.notion) {
+      config.notion.titleProperty = titlePropName;
+      saveConfig();
+    }
+
+    if (!props['Date'] || props['Date'].type !== 'date') updates['Date'] = { date: {} };
+    if (!props['Mood'] || props['Mood'].type !== 'select') {
+      updates['Mood'] = { select: { options: [
+        { name: 'great', color: 'green' }, { name: 'good', color: 'blue' },
+        { name: 'okay', color: 'yellow' }, { name: 'bad', color: 'orange' }, { name: 'awful', color: 'red' },
+      ]}};
+    }
+    for (let i = 1; i <= 3; i++) {
+      const key = `Gratitude ${i}`;
+      if (!props[key] || props[key].type !== 'rich_text') updates[key] = { rich_text: {} };
+    }
+    if (Object.keys(updates).length) {
+      await notionFetch(`/databases/${dbId}`, { method: 'PATCH', body: { properties: updates } });
+    }
+  }
+
+  // ===== Notion Sync (Upsert) =====
+  function chunkText(text, limit) {
+    limit = limit || 2000;
+    if (!text || text.length <= limit) return [text];
+    const chunks = [];
+    for (let i = 0; i < text.length; i += limit) chunks.push(text.slice(i, i + limit));
+    return chunks;
+  }
+
+  // buildNotionChildren and findTodayPage replaced by buildNotionChildrenForData and findPageByDate in syncToNotion
+
+  async function clearPageChildren(pageId) {
+    const blocks = await notionFetch('/blocks/' + pageId + '/children');
+    if (!blocks || !blocks.results) return;
+    for (var i = 0; i < blocks.results.length; i++) {
+      await notionFetch('/blocks/' + blocks.results[i].id, { method: 'DELETE' });
+    }
+  }
+
+  async function findPageByDate(dateStr) {
+    const query = await notionFetch('/databases/' + config.notion.databaseId + '/query', {
+      method: 'POST',
+      body: { filter: { property: 'Date', date: { equals: dateStr } }, page_size: 1 }
+    });
+    if (query && query.results && query.results.length) {
+      return query.results[0].id;
+    }
+    return null;
+  }
+
+  function buildNotionChildrenForData(data) {
+    const children = [];
+    const hasMorning = data.morning && data.morning.trim();
+    const hasGratitude = data.gratitude && data.gratitude.some(function(g) { return g.trim(); });
+    const hasDiary = data.diary && data.diary.trim();
+
+    if (hasMorning) {
+      children.push({ object: 'block', type: 'heading_2', heading_2: { rich_text: [{ type: 'text', text: { content: '\u{1F4DD} Morning Page' } }] } });
+      chunkText(data.morning).forEach(function(chunk) {
+        children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: chunk } }] } });
+      });
+    }
+
+    if (hasMorning && (hasGratitude || hasDiary)) {
+      children.push({ object: 'block', type: 'divider', divider: {} });
+    }
+
+    if (hasGratitude || hasDiary) {
+      children.push({ object: 'block', type: 'heading_2', heading_2: { rich_text: [{ type: 'text', text: { content: '\u{1F4D3} Daily Diary' } }] } });
+      if (hasGratitude) {
+        data.gratitude.filter(function(g) { return g.trim(); }).forEach(function(g) {
+          children.push({ object: 'block', type: 'bulleted_list_item', bulleted_list_item: { rich_text: [{ type: 'text', text: { content: g } }] } });
+        });
+      }
+      if (hasGratitude && hasDiary) {
+        children.push({ object: 'block', type: 'divider', divider: {} });
+      }
+      if (hasDiary) {
+        chunkText(data.diary).forEach(function(chunk) {
+          children.push({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: chunk } }] } });
+        });
+      }
+    }
+
+    return children;
+  }
+
+  async function syncToNotion(targetDateStr, targetData) {
+    if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
+    var dateStr = targetDateStr || todayKey();
+    var data = targetData || todayData;
+    var parts = dateStr.split('-');
+    var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    var days = ['일', '월', '화', '수', '목', '금', '토'];
+    var dateLabel = dateStr + ' ' + days[d.getDay()];
+
+    var titleProp = (config.notion && config.notion.titleProperty) || 'Name';
+    var properties = {
+      'Date': { date: { start: dateStr } },
+    };
+    properties[titleProp] = { title: [{ text: { content: dateLabel } }] };
+    if (data.mood) {
+      properties['Mood'] = { select: { name: data.mood } };
+    } else {
+      properties['Mood'] = { select: null };
+    }
+    var gratitude = data.gratitude || ['', '', ''];
+    for (var i = 0; i < 3; i++) {
+      var val = (gratitude[i] || '').trim();
+      properties['Gratitude ' + (i + 1)] = { rich_text: val ? [{ type: 'text', text: { content: val } }] : [] };
+    }
+
+    var children = buildNotionChildrenForData(data);
+
+    try {
+      // Use cached page ID only for today's date
+      var pageId = null;
+      if (dateStr === todayKey() && todayData.notionPageId) {
+        pageId = todayData.notionPageId;
+      } else {
+        pageId = await findPageByDate(dateStr);
+      }
+
+      if (pageId) {
+        await notionFetch('/pages/' + pageId, { method: 'PATCH', body: { properties: properties } });
+        await clearPageChildren(pageId);
+        if (children.length) {
+          await notionFetch('/blocks/' + pageId + '/children', { method: 'PATCH', body: { children: children } });
+        }
+      } else {
+        var result = await notionFetch('/pages', {
+          method: 'POST',
+          body: { parent: { database_id: config.notion.databaseId }, properties: properties, children: children }
+        });
+        if (result && result.id) {
+          if (dateStr === todayKey()) {
+            todayData.notionPageId = result.id;
+            saveTodayData();
+          } else {
+            // Cache the page ID for the target date
+            var targetDataObj = loadDataForDate(dateStr);
+            targetDataObj.notionPageId = result.id;
+            saveDataForDate(dateStr, targetDataObj);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Notion sync error:', err);
+      showToast('Notion sync failed. Changes saved locally.');
+    }
+  }
+
+  // ===== Widget =====
+  function initWidget() {
+    applyNeuTheme(config.bgColor || '#E8ECEF', config.textColor || '#3a4556');
+    applyAccentToTargets();
+    document.getElementById('toggleLabel0').textContent = config.label1;
+    document.getElementById('toggleLabel1').textContent = config.label2;
+    todayData = loadTodayData();
+    updateToggles();
+    updateMoodIcon();
+    renderClock();
+    startClock();
+    fetchWeather();
+    updateDateInfo();
+  }
+
+  function updateDateInfo() {
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    document.getElementById('dateInfo').textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+  }
+
+  function updateToggles() {
+    setToggle(0, todayData.morningDone);
+    setToggle(1, todayData.diaryDone);
+  }
+
+  function setToggle(idx, on) {
+    const track = document.getElementById(`toggleTrack${idx}`);
+    const thumb = document.getElementById(`toggleThumb${idx}`);
+    track.classList.toggle('on', on);
+    thumb.classList.toggle('on', on);
+    thumb.classList.toggle('off', !on);
+  }
+
+  // ===== Clock =====
+  function getNow() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: config.tz }));
+  }
+
+  function renderClock() {
+    const inner = document.getElementById('clockInner');
+    if (config.clockType === 'analog') {
+      inner.innerHTML = '<div class="analog-face" id="analogFace"></div>';
+      const face = document.getElementById('analogFace');
+      for (let i = 0; i < 12; i++) {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        const angle = i * 30;
+        const isMajor = i % 3 === 0;
+        tick.style.height = isMajor ? '10px' : '6px';
+        tick.style.width = isMajor ? '2px' : '1.5px';
+        tick.style.transformOrigin = `center ${68 - 6}px`;
+        tick.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+        tick.style.opacity = isMajor ? '0.6' : '0.3';
+        face.appendChild(tick);
+      }
+      face.innerHTML += '<div class="hand hour-hand" id="hourHand"></div><div class="hand min-hand" id="minHand"></div><div class="hand sec-hand" id="secHand"></div><div class="center-dot"></div>';
+      updateAnalogHands();
+    } else {
+      const now = getNow();
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      inner.innerHTML = `<span class="clock-time" id="clockTime">${timeStr}</span>`;
+    }
+    updateProgressRing();
+  }
+
+  function updateAnalogHands() {
+    const now = getNow();
+    const h = now.getHours() % 12, m = now.getMinutes(), s = now.getSeconds();
+    const hDeg = (h * 30) + (m * 0.5), mDeg = m * 6, sDeg = s * 6;
+    const hourEl = document.getElementById('hourHand');
+    const minEl = document.getElementById('minHand');
+    const secEl = document.getElementById('secHand');
+    if (hourEl) hourEl.style.transform = `translateX(-50%) rotate(${hDeg}deg)`;
+    if (minEl) minEl.style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+    if (secEl) secEl.style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+  }
+
+  function updateProgressRing() {
+    const now = getNow();
+    const totalMin = now.getHours() * 60 + now.getMinutes();
+    const progress = totalMin / (24 * 60);
+    const circumference = 2 * Math.PI * 72;
+    const offset = circumference * (1 - progress);
+    document.getElementById('progressRing').setAttribute('stroke-dashoffset', offset);
+  }
+
+  function startClock() {
+    if (clockInterval) clearInterval(clockInterval);
+    clockInterval = setInterval(() => {
+      if (config.clockType === 'digital') {
+        const now = getNow();
+        const el = document.getElementById('clockTime');
+        if (el) el.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else {
+        updateAnalogHands();
+      }
+      updateProgressRing();
+    }, 1000);
+  }
+
+  // ===== Weather =====
+  async function fetchWeather() {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${config.lat}&longitude=${config.lon}&current=temperature_2m,weather_code&timezone=auto`;
+      const res = await fetch(url);
+      const data = await res.json();
+      weatherCache = data.current;
+      const svgHtml = getWeatherSvg(data.current.weather_code);
+      const temp = Math.round(data.current.temperature_2m);
+      document.getElementById('weatherIcon').innerHTML = svgHtml;
+      document.getElementById('weatherTemp').textContent = `${temp}°C`;
+      document.getElementById('weatherCity').textContent = config.city;
+      document.getElementById('weatherTooltip').textContent = `${config.city} ${temp}°C`;
+    } catch (_) {
+      document.getElementById('weatherIcon').innerHTML = SVG_WEATHER.fallback;
+      document.getElementById('weatherTemp').textContent = '--';
+      document.getElementById('weatherTooltip').textContent = 'Unable to load';
+    }
+  }
+
+  // ===== Icon Buttons =====
+  // Button 0: Mood — shows current mood face, opens morning page on click
+  function updateMoodIcon() {
+    const mood = todayData.mood || 'none';
+    const el = document.getElementById('moodIconSvg');
+    if (el) el.outerHTML = SVG_MOOD[mood] || SVG_MOOD.none;
+    const btn = document.getElementById('iconBtn0');
+    if (btn) btn.classList.toggle('active', !!todayData.mood);
+  }
+
+  function clickMoodIcon() {
+    openModal(1);
+  }
+
+  // Buttons 1 & 2: Custom links
+  function clickLinkIcon(idx) {
+    const link = idx === 0 ? config.link1 : config.link2;
+    const btn = document.getElementById(`iconBtn${idx + 1}`);
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 150);
+    if (link) {
+      window.open(link, '_blank', 'noopener');
+    } else {
+      showToast('No link set. Configure in settings.');
+    }
+  }
+
+  // ===== Modals =====
+  function openModal(idx) {
+    currentModal = idx;
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalMorning').style.display = idx === 0 ? 'block' : 'none';
+    document.getElementById('modalDiary').style.display = idx === 1 ? 'block' : 'none';
+    if (idx === 0) {
+      document.getElementById('morningText').value = todayData.morning || '';
+    } else {
+      // Reset date selection to today
+      diaryDateSelection = 'today';
+      selectDiaryDate('today');
+      document.getElementById('diaryDateTodayLabel').textContent = 'Today (' + formatDateLabel(todayKey()) + ')';
+      document.getElementById('diaryDateYesterdayLabel').textContent = 'Yesterday (' + formatDateLabel(yesterdayKey()) + ')';
+
+      selectedMood = todayData.mood || '';
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', b.dataset.mood === selectedMood));
+      document.getElementById('diaryText').value = todayData.diary || '';
+      for (let i = 0; i < 3; i++) {
+        document.getElementById(`grat${i}`).value = (todayData.gratitude && todayData.gratitude[i]) || '';
+      }
+    }
+    overlay.classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    currentModal = -1;
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  function selectMood(btn) {
+    if (selectedMood === btn.dataset.mood) {
+      selectedMood = '';
+    } else {
+      selectedMood = btn.dataset.mood;
+    }
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', b.dataset.mood === selectedMood));
+  }
+
+  async function saveMorning() {
+    todayData.morning = document.getElementById('morningText').value;
+    todayData.morningDone = !!todayData.morning.trim();
+    saveTodayData();
+    updateToggles();
+    closeModal();
+    showToast('Morning page saved!');
+    syncToNotion(todayKey(), todayData);
+  }
+
+  async function saveDiary() {
+    var targetDateKey = diaryDateSelection === 'yesterday' ? yesterdayKey() : todayKey();
+    var targetData;
+
+    if (targetDateKey === todayKey()) {
+      targetData = todayData;
+    } else {
+      targetData = loadDataForDate(targetDateKey);
+    }
+
+    targetData.mood = selectedMood;
+    targetData.gratitude = [
+      document.getElementById('grat0').value,
+      document.getElementById('grat1').value,
+      document.getElementById('grat2').value,
+    ];
+    targetData.diary = document.getElementById('diaryText').value;
+    targetData.diaryDone = !!(
+      targetData.mood &&
+      targetData.gratitude[0] && targetData.gratitude[0].trim() &&
+      targetData.gratitude[1] && targetData.gratitude[1].trim() &&
+      targetData.gratitude[2] && targetData.gratitude[2].trim() &&
+      targetData.diary && targetData.diary.trim()
+    );
+
+    saveDataForDate(targetDateKey, targetData);
+
+    if (targetDateKey === todayKey()) {
+      todayData = targetData;
+      updateToggles();
+      updateMoodIcon();
+    }
+
+    closeModal();
+    var dateLabel = diaryDateSelection === 'yesterday' ? 'yesterday' : 'today';
+    showToast('Daily diary saved for ' + dateLabel + '!');
+    syncToNotion(targetDateKey, targetData);
+  }
+
+  // ===== Refresh =====
+  async function refreshWidget() {
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.remove('spinning');
+    void btn.offsetWidth;
+    btn.classList.add('spinning');
+
+    // Bidirectional sync: pull from Notion first, then update local
+    await pullFromNotion();
+
+    todayData = loadTodayData();
+    updateToggles();
+    updateMoodIcon();
+    fetchWeather();
+    updateDateInfo();
+    renderClock();
+  }
+
+  async function pullFromNotion() {
+    if (!config.notion || !config.notion.accessToken || !config.notion.databaseId) return;
+    try {
+      var pageId = await findPageByDate(todayKey());
+      if (!pageId) return;
+
+      // Fetch page properties
+      var page = await notionFetch('/pages/' + pageId);
+      if (!page || !page.properties) return;
+
+      var props = page.properties;
+      // Extract mood
+      if (props['Mood'] && props['Mood'].select && props['Mood'].select.name) {
+        todayData.mood = props['Mood'].select.name;
+      }
+      // Extract gratitude
+      for (var i = 1; i <= 3; i++) {
+        var key = 'Gratitude ' + i;
+        if (props[key] && props[key].rich_text && props[key].rich_text.length) {
+          todayData.gratitude[i - 1] = props[key].rich_text[0].plain_text || '';
+        }
+      }
+
+      // Fetch child blocks for morning page & diary text
+      var blocks = await notionFetch('/blocks/' + pageId + '/children');
+      if (blocks && blocks.results) {
+        var section = '';
+        var morningText = [];
+        var diaryText = [];
+        for (var b = 0; b < blocks.results.length; b++) {
+          var block = blocks.results[b];
+          if (block.type === 'heading_2' && block.heading_2 && block.heading_2.rich_text && block.heading_2.rich_text.length) {
+            var heading = block.heading_2.rich_text[0].plain_text || '';
+            if (heading.indexOf('Morning') !== -1) section = 'morning';
+            else if (heading.indexOf('Diary') !== -1 || heading.indexOf('Daily') !== -1) section = 'diary';
+          } else if (block.type === 'paragraph' && block.paragraph && block.paragraph.rich_text) {
+            var text = block.paragraph.rich_text.map(function(rt) { return rt.plain_text; }).join('');
+            if (section === 'morning') morningText.push(text);
+            else if (section === 'diary') diaryText.push(text);
+          }
+        }
+        if (morningText.length) todayData.morning = morningText.join('\n');
+        if (diaryText.length) todayData.diary = diaryText.join('\n');
+      }
+
+      todayData.notionPageId = pageId;
+      todayData.morningDone = !!(todayData.morning && todayData.morning.trim());
+      todayData.diaryDone = !!(
+        todayData.mood &&
+        todayData.gratitude[0] && todayData.gratitude[0].trim() &&
+        todayData.gratitude[1] && todayData.gratitude[1].trim() &&
+        todayData.gratitude[2] && todayData.gratitude[2].trim() &&
+        todayData.diary && todayData.diary.trim()
+      );
+      saveTodayData();
+    } catch (err) {
+      console.error('Pull from Notion error:', err);
+    }
+  }
+
+  // ===== Settings Panel =====
+  function toggleSettings() {
+    var panel = document.getElementById('settingsPanel');
+    var isOpen = panel.classList.contains('open');
+    if (isOpen) {
+      panel.classList.remove('open');
+    } else {
+      document.getElementById('settingsLink1').value = config.link1 || '';
+      document.getElementById('settingsLink2').value = config.link2 || '';
+      panel.classList.add('open');
+    }
+  }
+
+  function saveSettings() {
+    config.link1 = document.getElementById('settingsLink1').value || '';
+    config.link2 = document.getElementById('settingsLink2').value || '';
+    saveConfig();
+    document.getElementById('settingsPanel').classList.remove('open');
+    showToast('Settings saved!');
+  }
+
+  // Close settings when clicking outside
+  document.addEventListener('click', function(e) {
+    var panel = document.getElementById('settingsPanel');
+    var btn = document.getElementById('settingsBtn');
+    if (panel && panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      panel.classList.remove('open');
+    }
+  });
+
+  // ===== Toast =====
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ===== Embed Config Loading =====
+  async function loadEmbedConfig() {
+    var params = new URLSearchParams(window.location.search);
+    var widgetId = params.get('w');
+    if (!widgetId) return false;
+    try {
+      var res = await fetch(PROXY_URL + '/api/config/' + widgetId);
+      if (!res.ok) return false;
+      var ec = await res.json();
+      config.region = ec.region || config.region;
+      config.city = ec.city || config.city;
+      config.tz = ec.tz || config.tz;
+      config.lat = ec.lat || config.lat;
+      config.lon = ec.lon || config.lon;
+      config.clockType = ec.clockType || config.clockType;
+      config.bgColor = ec.bgColor || config.bgColor;
+      config.textColor = ec.textColor || config.textColor;
+      config.accent = ec.accent || config.accent;
+      config.label1 = ec.label1 || config.label1;
+      config.label2 = ec.label2 || config.label2;
+      config.link1 = ec.link1 || config.link1;
+      config.link2 = ec.link2 || config.link2;
+      if (ec.notion) config.notion = ec.notion;
+      config.onboardingDone = true;
+      return true;
+    } catch (e) {
+      console.error('Failed to load widget config:', e);
+      return false;
+    }
+  }
+
+  // ===== Init =====
+  window.onload = async () => {
+    // If URL has ?w= param, always treat as embed — hide onboarding immediately
+    var hasEmbedParam = new URLSearchParams(window.location.search).has('w');
+    if (hasEmbedParam) {
+      document.getElementById('onboardingWindow').classList.add('hidden');
+    }
+
+    var isEmbed = await loadEmbedConfig();
+    document.getElementById('regionSelect').value = config.region;
+    populateCities();
+    document.getElementById('bgColorPicker').value = config.bgColor || '#E8ECEF';
+    document.getElementById('textColorPicker').value = config.textColor || '#3a4556';
+    if (isEmbed) {
+      document.getElementById('onboardingWindow').classList.add('hidden');
+      saveConfig();
+      // Auto-setup Notion database properties on embed load
+      if (config.notion && config.notion.databaseId) {
+        setupNotionDatabase(config.notion.databaseId);
+      }
+    } else if (hasEmbedParam) {
+      // Embed param present but config load failed — still hide onboarding, use cached config
+      document.getElementById('onboardingWindow').classList.add('hidden');
+    }
+
+    // Reset widget to default colors during onboarding
+    if (!hasEmbedParam && !isEmbed) {
+      config.bgColor = '#E8ECEF';
+      config.textColor = '#3a4556';
+      config.accent = '#a8c5a0';
+      document.getElementById('bgColorPicker').value = '#E8ECEF';
+      document.getElementById('textColorPicker').value = '#3a4556';
+      document.getElementById('accentColorPicker').value = '#a8c5a0';
+    }
+    initWidget();
+  };
+</script>
+</body>
+</html>
